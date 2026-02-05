@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>【特訓】文字をけそう！</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #fff9f0;
+      font-family: "UD Digi Kyokasho N-R", "Kosugi Maru", sans-serif;
+      margin: 20px;
+      text-align: center;
+      color: #333;
+    }
+
+    h1 {
+      color: #e65100;
+      font-size: 24px;
+      border-bottom: 4px solid #e65100;
+      display: inline-block;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+
+    .info-box {
+      background: white;
+      border: 3px solid #ffcc80;
+      border-radius: 15px;
+      padding: 15px;
+      margin: 10px auto;
+      max-width: 700px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .score-area {
+      font-size: 20px;
+      font-weight: bold;
+      color: #ef6c00;
+      margin-bottom: 10px;
+    }
+
+    textarea#myInfo {
+      width: 90%;
+      height: 60px;
+      font-size: 16px;
+      border: none;
+      resize: none;
+      background: transparent;
+      text-align: center;
+      color: #e65100;
+      font-family: inherit;
+      font-weight: bold;
+    }
+
+    .game-container {
+      margin: 20px auto;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .word-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      background: white;
+      padding: 12px;
+      border-radius: 12px;
+      border: 2px solid #ffe0b2;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .target-label {
+      font-size: 18px;
+      color: #666;
+      width: 180px;
+      text-align: right;
+      font-weight: bold;
+    }
+
+    input.edit-box {
+      font-size: 26px;
+      padding: 8px;
+      border: 3px solid #ff9800;
+      border-radius: 8px;
+      width: 380px;
+      text-align: center;
+      letter-spacing: 2px;
+      outline: none;
+    }
+
+    input.correct {
+      background-color: #e8f5e9;
+      border-color: #4caf50;
+      color: #2e7d32;
+    }
+
+    .guide {
+      margin-top: 20px;
+      background: #fff3e0;
+      padding: 15px;
+      border-radius: 10px;
+      display: inline-block;
+      border: 1px solid #ffb74d;
+    }
+
+    .key-cap {
+      background: #2c3e50;
+      color: white;
+      border-radius: 5px;
+      padding: 3px 10px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body onload="initGame()">
+
+  <h1>💣 ばくだん文字「★」を けそう！ 💣</h1>
+
+  <div class="info-box">
+    <div class="score-area">
+      のこり：<span id="timer">60</span>秒　
+      クリア数：<span id="currentScore">0</span>
+    </div>
+    <textarea id="myInfo" readonly></textarea>
+  </div>
+
+  <div class="game-container" id="gameArea"></div>
+
+  <div class="guide">
+    <strong>💡 けし方のコツ</strong><br><br>
+    <span class="key-cap">Backspace</span> ： カーソルの <b>← 左がわ</b> をけす<br>
+    <span class="key-cap">Delete</span> ： カーソルの <b>右がわ →</b> をけす
+  </div>
+
+  <p style="font-size: 14px; color: #90a4ae; margin-top: 20px;">[F5]キーで やりなおし</p>
+
+  <script>
+    // ▼ ワードを大幅に増やしたわよ！
+    const WORDS = [
+      "吉良吉影", "ピカチュウ", "シンジ", "幽波紋", "ドガース", 
+      "ハローキティ", "五条悟", "ちいかわ", "アーニャ", "キルア", "クラピカ",
+      "空条承太郎", "煉獄杏寿郎", "竈門炭治郎", "フリーレン", "猫ミーム",
+      "星野アイ", "ハチワレ", "うさぎ", "推しの子", "猫猫", "限界オタク",
+      "草超えて不可避", "タイピング神", "おぱんちゅうさぎ", "スタープラチナ",
+      "キラークイーン", "領域展開", "ヒソカ", "ヱヴァンゲリヲン", "ゼルダの伝説",
+      "マッシュル", "ナルトダンス", "しかのこのこのここしたんたん", "残酷な天使のテーゼ",
+      "ボンボンドロップシール", "ヒカキン", "潔世一", "ボマー", "呪術廻戦", "宿儺",
+      "強風オールバック", "ゾルディック", "アイドル", "晩餐歌", "シナモロール", "ガンダム",
+      "クロミ", "レオリオ", "コナン", "スプラトゥーン",
+      "サーモンラン", "テラスタル", "オーガポン", "コライドン", "ミライドン"
+    ];
+    
+    let score = 0;
+    let timeLeft = 60;
+    let timerID;
+    let isPlaying = false;
+
+    function makeQuestion(word) {
+      let q = word.split("");
+      const starCount = Math.floor(Math.random() * 2) + 2; 
+      for(let i=0; i < starCount; i++) {
+        let pos = Math.floor(Math.random() * (q.length + 1));
+        q.splice(pos, 0, "★");
+      }
+      return q.join("");
+    }
+
+    function initGame() {
+      score = 0;
+      timeLeft = 60;
+      isPlaying = false;
+      document.getElementById("currentScore").textContent = score;
+      document.getElementById("timer").textContent = timeLeft;
+      document.getElementById("myInfo").value = "入力ボックスをクリックしてスタート！\n「★」だけをきれいに消してね！";
+      
+      const area = document.getElementById("gameArea");
+      area.innerHTML = "";
+
+      for(let i=0; i<5; i++) {
+        addQuestionRow();
+      }
+    }
+
+    function addQuestionRow() {
+        const area = document.getElementById("gameArea");
+        let targetWord = WORDS[Math.floor(Math.random() * WORDS.length)];
+        let question = makeQuestion(targetWord);
+
+        let row = document.createElement("div");
+        row.className = "word-row";
+        row.innerHTML = `
+          <div class="target-label">「${targetWord}」に</div>
+          <input type="text" class="edit-box" value="${question}" 
+                 data-answer="${targetWord}" 
+                 onfocus="startGame()" 
+                 oninput="checkAnswer(this)">
+        `;
+        area.appendChild(row);
+    }
+
+    function startGame() {
+      if(isPlaying) return;
+      isPlaying = true;
+      timerID = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").textContent = timeLeft;
+        if(timeLeft <= 0) endGame();
+      }, 1000);
+    }
+
+    function checkAnswer(input) {
+      const answer = input.getAttribute("data-answer");
+      if(input.value === answer) {
+        input.classList.add("correct");
+        input.readOnly = true;
+        score++;
+        document.getElementById("currentScore").textContent = score;
+        
+        const allInputs = document.querySelectorAll(".edit-box");
+        const allCorrect = Array.from(allInputs).every(i => i.readOnly);
+        if(allCorrect) {
+          setTimeout(nextSet, 400);
+        }
+      }
+    }
+
+    function nextSet() {
+      const area = document.getElementById("gameArea");
+      area.innerHTML = "";
+      for(let i=0; i<5; i++) {
+        addQuestionRow();
+      }
+      area.querySelector("input").focus();
+    }
+
+    function endGame() {
+      clearInterval(timerID);
+      const inputs = document.querySelectorAll(".edit-box");
+      inputs.forEach(i => i.readOnly = true);
+      document.getElementById("myInfo").value = `終了！${score}個 けせたよ！\n画面を更新（F5）してもう一回あそんでね。`;
+    }
+  </script>
+</body>
+</html>

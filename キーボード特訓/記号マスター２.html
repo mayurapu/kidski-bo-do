@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>【練習】かおもじを作ろう！</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #fce4ec;
+      font-family: "UD Digi Kyokasho N-R", "Kosugi Maru", sans-serif;
+      margin: 20px;
+      text-align: center;
+      color: #333;
+    }
+
+    h1 {
+      color: #c2185b;
+      font-size: 26px;
+      border-bottom: 4px solid #f06292;
+      display: inline-block;
+      padding-bottom: 5px;
+    }
+
+    .info-box {
+      background: white;
+      border: 3px solid #f06292;
+      border-radius: 20px;
+      padding: 15px;
+      margin: 10px auto;
+      max-width: 700px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .score-area {
+      font-size: 20px;
+      font-weight: bold;
+      color: #ad1457;
+      margin-bottom: 10px;
+    }
+
+    .warning-hint {
+      background-color: #fff9c4;
+      padding: 10px;
+      border-radius: 10px;
+      border: 2px dashed #fbc02d;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    #question-container {
+      margin: 20px 0;
+    }
+
+    #emotion-label {
+      font-size: 22px;
+      color: #f06292;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    #question-display {
+      font-size: 70px;
+      font-weight: bold;
+      color: #333;
+      background: white;
+      display: inline-block;
+      padding: 20px 40px;
+      border-radius: 30px;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      min-width: 300px;
+    }
+
+    #input-area {
+      font-size: 45px;
+      padding: 10px;
+      border: 5px solid #f06292;
+      border-radius: 15px;
+      width: 450px;
+      text-align: center;
+      outline: none;
+    }
+
+    #quote-display {
+      margin-top: 15px;
+      padding: 15px;
+      background: #fff3e0;
+      border-radius: 10px;
+      border-left: 10px solid #ff9800;
+      display: none; 
+      text-align: left;
+      font-size: 20px;
+      animation: bounce 0.5s;
+    }
+
+    @keyframes bounce {
+      0% { transform: scale(0.8); }
+      70% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .guide {
+      margin-top: 20px;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      display: inline-block;
+      border: 2px solid #f06292;
+      max-width: 800px;
+    }
+
+    .guide table { width: 100%; border-collapse: collapse; }
+    .guide td { padding: 8px 15px; text-align: left; border-bottom: 1px solid #fce4ec; font-size: 18px; }
+    .key-cap { background: #eee; border: 2px solid #666; border-radius: 5px; padding: 2px 8px; font-weight: bold; font-size: 18px; box-shadow: 0 2px 0 #999; display: inline-block; min-width: 20px; text-align: center; }
+    .plus { margin: 0 5px; font-weight: bold; color: #c2185b; }
+    .success { background-color: #c8e6c9 !important; border-color: #4caf50 !important; }
+  </style>
+</head>
+<body onload="initGame()">
+
+  <h1>✨ きごうで「かおもじ」ミッション！ ✨</h1>
+
+  <div class="info-box">
+    <div class="score-area">
+      のこり：<span id="timer">90</span>秒　
+      クリア数：<span id="currentScore">0</span>
+    </div>
+    
+    <div class="warning-hint">
+      ⚠️ <b>うてたら【Enter】を２回トントン！とおそう！</b><br>
+      でないときは <span class="key-cap">半角／全角</span> ボタンをおしてね！
+    </div>
+
+    <div id="message" style="font-weight: bold; color: #ad1457;">下のガイドを見ながら作ってみよう！</div>
+
+    <div id="quote-display"></div>
+  </div>
+
+  <div id="question-container">
+    <div id="emotion-label">いまのきもち：---</div>
+    <div id="question-display">---</div>
+  </div>
+
+  <input type="text" id="input-area" onkeydown="handleKey(event)" autocomplete="off">
+
+  <div class="guide">
+    <strong>💡 きごうの打ちかたガイド</strong><br><br>
+    <table>
+      <tr>
+        <td><b>( )</b> かっこ</td>
+        <td><span class="key-cap">Shift</span> <span class="plus">＋</span> <span class="key-cap">8</span> と <span class="key-cap">9</span></td>
+        <td><b>^</b> おめめ</td>
+        <td><span class="key-cap">へ</span> （そのまま）</td>
+      </tr>
+      <tr>
+        <td><b>_</b> くち・した</td>
+        <td><span class="key-cap">Shift</span> <span class="plus">＋</span> <span class="key-cap">ろ</span></td>
+        <td><b>-</b> ねむり目</td>
+        <td><span class="key-cap">ほ</span> （そのまま）</td>
+      </tr>
+      <tr>
+        <td><b>;</b> あせ</td>
+        <td><span class="key-cap">れ</span> （そのまま）</td>
+        <td><b>o</b> おくち</td>
+        <td><span class="key-cap">O</span> （アルファベット）</td>
+      </tr>
+      <tr>
+        <td><b>! ?</b> びっくり</td>
+        <td><span class="key-cap">Shift</span> <span class="plus">＋</span> <span class="key-cap">1</span> と <span class="key-cap">/</span></td>
+        <td><b>/ \</b> て・かお</td>
+        <td><span class="key-cap">/</span>（めい） <span class="key-cap">\</span>（ろ）</td>
+      </tr>
+      <tr>
+        <td><b>T</b> なみだ</td>
+        <td><span class="key-cap">Shift</span> <span class="plus">＋</span> <span class="key-cap">T</span></td>
+        <td><b>v</b> ぴーす</td>
+        <td><span class="key-cap">V</span> （アルファベット）</td>
+      </tr>
+    </table>
+  </div>
+
+  <script>
+    const ANIME_QUOTES = [
+      "「あきらめたら そこでしあいしゅうりょうですよ…？」",
+      "「わくわくっ！よくがんばったます！」",
+      "「タイピング爆速界隈」",
+      "「さーて，来週のタイピングさんはー？」",
+      "「おみくじ：大吉！やったね！ラッキーカラーは青！」",
+      "「全集中！その意気だ！」",
+      "「逃げちゃダメだ…なんて思わなくていい！よくやった！」",
+      "「記号王に おれはなる！」",
+      "「癖になってんだ，記号打つの　家庭の事情でな」",
+      "「おみくじ：中吉！おともだちにしんせつにするとラッキー！」",
+      "「こんなに打てるなんて，オラわくわくすっぞ！」",
+      "「９０秒で打ってみな」",
+      "「おれは人間をやめるぞ，ジョジョ―ッ！」",
+      "「凝（ギョウ）を使え！記号の位置が見えるはずだ！」",
+      "「アリーヴェデルチ（さよならだ）」",
+      "「おみくじ：吉！集中力アップ！宿題がはやくおわるかも」",
+      "「記号タイピングとかないんか？」",
+      "「とまるんじゃねぇぞ」",
+      "「す。すごいね…ッ！」「ワ…ワァ…ッ！」",
+      "「勝ったッ！「第３部」完！！」",
+      "「打ったな！親父も打てた事ないのに！！」",
+      "「記号の呼吸，壱ノ型！」",
+      "「おみくじ：吉！先生のことばになやみのヒントがあるかも！」",
+      "「見た目は子ども，タイピング力は大人！」",
+      "「打てる…！私にも記号が打てるぞ……！」",
+      "「高評価とタイピング、よろしくね！」",
+      "「感謝の正拳突き…ならぬ、感謝のタイピング１万回！」",
+      "(" + "おまえの次のセリフは『記号むずすぎ！』という！" + ")",
+      "「おまえは今まで打ったキーの数を覚えているのか？」",
+      "「CHU！打てすぎてごめん！」",
+      "「覚悟はいいか？ おれはできてる」"
+    ];
+
+    const FACE_MISSIONS = [
+      { face: "(^^)", name: "にっこり" }, { face: "(^-^)", name: "にこっ" },
+      { face: "(ToT)", name: "えーん" }, { face: "(^o^)", name: "わーい" },
+      { face: "(^^;)", name: "あせあせ" }, { face: "(-_-)", name: "ねむい…" },
+      { face: "(^^)/", name: "やっほー" }, { face: "(^_-)", name: "ういんく" },
+      { face: "!(^^)!", name: "ばんざい！" }, { face: "(?_?)", name: "はてな？" },
+      { face: "(^^)v", name: "ぴーす！" }
+    ];
+
+    let score = 0;
+    let timeLeft = 90;
+    let currentTarget = "";
+    let isPlaying = false;
+    let timerID;
+
+    const display = document.getElementById("question-display");
+    const label = document.getElementById("emotion-label");
+    const inputArea = document.getElementById("input-area");
+    const quoteDisplay = document.getElementById("quote-display");
+
+    function initGame() {
+      score = 0;
+      timeLeft = 90;
+      isPlaying = false;
+      document.getElementById("currentScore").textContent = "0";
+      document.getElementById("timer").textContent = "90";
+      document.getElementById("message").textContent = "トントン！と２回 Enter をおすのがコツだよ！";
+      quoteDisplay.style.display = "none";
+      inputArea.readOnly = false;
+      inputArea.value = "";
+      inputArea.focus();
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      const item = FACE_MISSIONS[Math.floor(Math.random() * FACE_MISSIONS.length)];
+      currentTarget = item.face;
+      label.textContent = "いまのきもち： " + item.name;
+      display.textContent = currentTarget;
+      inputArea.value = "";
+      inputArea.classList.remove("success");
+    }
+
+    function handleKey(e) {
+      if (timeLeft <= 0) {
+        if (e.code === "Space") initGame();
+        return;
+      }
+      if (!isPlaying && e.key !== "Enter" && e.key !== "Process") {
+        startTimer();
+      }
+      if (e.key === "Enter") {
+        // 少し遅らせて確定後の文字をチェックするよ
+        setTimeout(() => {
+          if (inputArea.value === currentTarget) {
+            score++;
+            document.getElementById("currentScore").textContent = score;
+            inputArea.classList.add("success");
+            setTimeout(nextQuestion, 200);
+          }
+        }, 10);
+      }
+    }
+
+    function startTimer() {
+      isPlaying = true;
+      timerID = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timerID);
+          isPlaying = false;
+          inputArea.readOnly = true;
+          display.textContent = "Time Up!";
+          
+          const randomQuote = ANIME_QUOTES[Math.floor(Math.random() * ANIME_QUOTES.length)];
+          quoteDisplay.innerHTML = `<strong>★ キャラクターからのメッセージ ★</strong><br>${randomQuote}`;
+          quoteDisplay.style.display = "block";
+
+          document.getElementById("message").innerHTML = 
+            `<b>${score}こ クリア！</b><br>リトライは <span class="key-cap" style="box-shadow:none;">スペース</span> をおしてね！`;
+        }
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
