@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>【特訓】コピー＆ペースト</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f0f4f8;
+      font-family: "UD Digi Kyokasho N-R", "Kosugi Maru", sans-serif;
+      margin: 20px;
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    h1 {
+      color: #1a237e;
+      font-size: 26px;
+      border-bottom: 4px solid #1a237e;
+      display: inline-block;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+
+    .info-box {
+      background: white;
+      border: 3px solid #3f51b5;
+      border-radius: 15px;
+      padding: 15px;
+      margin: 10px auto;
+      max-width: 700px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .score-area {
+      font-size: 20px;
+      font-weight: bold;
+      color: #e91e63;
+      margin-bottom: 10px;
+    }
+
+    #myInfo {
+      width: 90%;
+      height: 60px;
+      font-size: 16px;
+      border: none;
+      resize: none;
+      background: transparent;
+      text-align: center;
+      color: #3f51b5;
+      font-family: inherit;
+      font-weight: bold;
+    }
+
+    table {
+      margin: 10px auto;
+      border-spacing: 15px;
+    }
+
+    input {
+      font-size: 22px;
+      padding: 10px;
+      border: 3px solid #cfd8dc;
+      border-radius: 10px;
+      width: 220px;
+      text-align: center;
+      background-color: white;
+      outline: none;
+    }
+
+    input[name^="txt"] { border-color: #3f51b5; color: #1a237e; }
+    input[name^="ans"] { border-color: #ff9800; background-color: #fffde7; }
+
+    .success-text {
+      color: #ffffff !important;
+      background-color: #4caf50 !important;
+      border-color: #2e7d32 !important;
+    }
+
+    .guide-box {
+      margin-top: 15px;
+      background: #e8eaf6;
+      padding: 15px;
+      border-radius: 15px;
+      display: inline-block;
+      border: 1px solid #c5cae9;
+    }
+
+    .shortcut-key {
+      background: #2c3e50;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-family: monospace;
+      margin: 0 3px;
+    }
+  </style>
+</head>
+<body onload="initType()">
+
+  <h1>📋 コピー＆ペースト 特訓 📋</h1>
+
+  <div class="info-box">
+    <div class="score-area">
+      最高記録：<span id="bestScore">--</span>　
+      のこり：<span id="timer">60</span>秒　
+      クリア数：<span id="currentScore">0</span>
+    </div>
+    <textarea id="myInfo" readonly></textarea>
+  </div>
+
+  <form name="myform">
+    <table>
+      <tbody id="typingBody"></tbody>
+    </table>
+  </form>
+
+  <div class="guide-box">
+    <strong>ミッション：</strong> 左から同じ言葉をさがして <span class="shortcut-key">Ctrl</span>+<span class="shortcut-key">C</span> 
+    ⇒ 右のわくに <span class="shortcut-key">Ctrl</span>+<span class="shortcut-key">V</span> せよ！
+  </div>
+
+  <p style="font-size: 14px; color: #90a4ae; margin-top: 20px;">[F5]キーで リセット</p>
+
+  <script>
+    const MASTER_WORDS = [
+      "りんご", "初号機", "ひまわり", "みかん", "クロミ", "ぶどう", "エスティント",
+      "ヱヴァンゲリヲン", "UMA", "野原ひろし", "ぱんだ", "空条承太郎", "いぬ", "ゴン",
+      "えんぴつ", "ミライドン", "スタンド使い", "はさみ", "あか", "ドラえもん",
+      "しまじろう", "ピカチュウ", "夏油傑", "ギター", "アンパンマン", "たまねぎ",
+      "寿司", "ゾルディック", "ディオ・ブランド―", "おにぎり", "ヒカキン", "SCP"
+    ];
+
+    let currentWords = []; 
+    let Aweek = [0, 1, 2, 3, 4, 5, 6]; 
+    let RAweek = []; 
+    let RStatus = [0,0,0,0,0,0,0];
+    let score = 0;
+    let timeLeft = 60;
+    let timerID, checkID;
+    let isStarted = false;
+
+    const tbody = document.getElementById("typingBody");
+    const obj = document.myform;
+
+    for(let i=0; i<7; i++) {
+      let tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td style="color:#3f51b5">${i+1}.</td>
+        <td><input name="txt${i}" type="text" readonly tabindex="-1"></td>
+        <td style="color:#ff9800">▶</td>
+        <td><input name="ans${i}" type="text" onfocus="handleFocus(${i})"></td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    function initType() {
+      const shuffled = [...MASTER_WORDS].sort(() => 0.5 - Math.random());
+      currentWords = shuffled.slice(0, 7);
+
+      for(let i = 0; i < 7; i++) {
+        let a = Math.floor(Math.random() * (7 - i));
+        let x = Aweek[i];
+        Aweek[i] = Aweek[i+a];
+        Aweek[i+a] = x;
+      }
+      for(let i = 0; i < 7; i++) RAweek[Aweek[i]] = i;
+
+      for(let i=0; i<7; i++) {
+        obj.elements["txt" + i].value = currentWords[Aweek[i]];
+        obj.elements["txt" + i].className = "";
+        
+        obj.elements["ans" + i].value = currentWords[i];
+        obj.elements["ans" + i].style.color = "#ccc";
+        obj.elements["ans" + i].className = "";
+        obj.elements["ans" + i].readOnly = false;
+        RStatus[i] = 0;
+      }
+      
+      let best = localStorage.getItem("COPY_BEST");
+      document.getElementById("bestScore").textContent = best ? best : "--";
+      document.getElementById("myInfo").value = "右のわくをクリックするとミッション開始！\nすべてのデータを転送（てんそう）せよ。";
+    }
+
+    function handleFocus(idx) {
+      if(!isStarted) {
+        isStarted = true;
+        timerID = setInterval(updateTimer, 1000);
+        checkID = setInterval(checkInput, 100);
+      }
+      if(RStatus[idx] === 0) {
+        obj.elements["ans" + idx].value = "";
+        obj.elements["ans" + idx].style.color = "#000";
+        RStatus[idx] = 1;
+      }
+    }
+
+    function updateTimer() {
+      timeLeft--;
+      document.getElementById("timer").textContent = timeLeft;
+      if(timeLeft <= 0) {
+        clearInterval(timerID);
+        clearInterval(checkID);
+        finishGame();
+      }
+    }
+
+    function checkInput() {
+      let roundClear = true;
+      for(let i=0; i<7; i++) {
+        if(RStatus[i] === 2) continue;
+        
+        let input = obj.elements["ans" + i];
+        if(RStatus[i] === 1 && input.value === currentWords[i]) {
+          input.className = "success-text";
+          input.readOnly = true;
+          obj.elements["txt" + RAweek[i]].className = "success-text";
+          RStatus[i] = 2;
+          score++;
+          document.getElementById("currentScore").textContent = score;
+        } else {
+          roundClear = false;
+        }
+      }
+      if(roundClear) {
+        setTimeout(() => {
+          isStarted = false;
+          clearInterval(timerID);
+          clearInterval(checkID);
+          initType();
+          handleFocus(); // タイマー再開用
+        }, 300);
+      }
+    }
+
+    function finishGame() {
+      for(let i=0; i<7; i++) obj.elements["ans" + i].readOnly = true;
+      let best = localStorage.getItem("COPY_BEST") || 0;
+      if(score > best) {
+        localStorage.setItem("COPY_BEST", score);
+        document.getElementById("myInfo").value = "MISSION COMPLETE!\n最高きろくを 更新しました！";
+      } else {
+        document.getElementById("myInfo").value = "終了！\nさらなる スピードアップを めざしましょう。";
+      }
+    }
+  </script>
+</body>
+</html>
