@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>隠者の念写修行：宿命のエジプト編</title>
+    <style>
+        body {
+            background-color: #1a0026;
+            color: #e0b0ff;
+            font-family: 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif;
+            text-align: center;
+            /* overflow: hidden; ← これを削除して、スクロールできるようにしたよ！ */
+            margin: 0;
+            padding-bottom: 50px; /* 下に少し余白を作ったよ */
+        }
+
+        h1 { 
+            color: #cc33ff; 
+            text-shadow: 4px 4px 0px #4b0082;
+            font-size: 2.5em;
+            margin-top: 20px;
+        }
+
+        /* ゲーム画面の外枠 */
+        #game-container {
+            position: relative;
+            width: 95%; /* 横幅を少し柔軟にしたよ */
+            max-width: 800px;
+            height: 500px;
+            margin: 20px auto;
+            border: 10px double #4b0082;
+            background: #000;
+            background-image: radial-gradient(circle at center, #2a0040 0%, #000 70%);
+            overflow: hidden; /* コンテナ内だけは、はみ出たターゲットを隠すよ */
+            box-shadow: 0 0 40px #ffd700;
+        }
+
+        /* 念写ターゲット */
+        #target {
+            position: absolute;
+            display: none;
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(45deg, #ffd700, #fff);
+            border: 6px solid #fff;
+            box-shadow: 0 0 25px #ffd700;
+            line-height: 150px;
+            font-size: 70px;
+            color: #000;
+            z-index: 10;
+            border-radius: 10px;
+            cursor: crosshair;
+        }
+
+        /* 結果表示エリア */
+        #result-area {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e0b0ff;
+            font-weight: bold;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        #result-area img {
+            max-width: 95%;
+            max-height: 95%;
+            border: 8px solid #fff;
+            transform: rotate(-1deg);
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.5);
+        }
+
+        /* 成功吹き出し */
+        #shout-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            z-index: 100;
+            pointer-events: none;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .togetoge {
+            position: relative;
+            background: #ffff00;
+            width: 90vw; /* 画面サイズに合わせて調整 */
+            max-width: 650px;
+            height: 400px;
+            clip-path: polygon(0% 20%, 20% 20%, 10% 0%, 40% 15%, 50% 0%, 60% 15%, 90% 0%, 80% 20%, 100% 20%, 90% 40%, 100% 50%, 90% 60%, 100% 80%, 80% 80%, 90% 100%, 60% 85%, 50% 100%, 40% 85%, 10% 100%, 20% 80%, 0% 80%, 10% 60%, 0% 50%, 10% 40%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 10px solid #000;
+        }
+
+        .shout-text {
+            color: #000;
+            font-size: 30px; /* 少し小さくしてスマホとかでも見やすくしたよ */
+            font-weight: 900;
+            text-align: center;
+            padding: 40px;
+            line-height: 1.2;
+        }
+
+        /* 称号カード */
+        #title-card {
+            position: fixed;
+            bottom: 30px;
+            right: -450px;
+            width: 300px;
+            background: #fff;
+            border: 5px solid #000;
+            padding: 15px;
+            z-index: 200;
+            transition: right 0.5s ease-out;
+            transform: rotate(-2deg);
+            text-align: left;
+            box-shadow: -10px 10px 0px #cc33ff;
+        }
+
+        .title-label { font-size: 14px; color: #666; font-weight: bold; }
+        .title-name { font-size: 16px; color: #000; font-weight: 900; margin-top: 5px; }
+
+        .show-shout { transform: translate(-50%, -50%) scale(1.1) !important; }
+        .show-title { right: 30px !important; }
+
+        #focus-lines {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(circle, transparent 30%, black 70%);
+            display: none;
+            z-index: 50;
+        }
+
+        .instructions {
+            background: #2a0040;
+            padding: 10px 20px;
+            border-radius: 30px;
+            display: inline-block;
+            border: 2px solid #cc33ff;
+            margin-bottom: 20px;
+        }
+
+        .key-hint { color: #ffcc00; font-weight: bold; }
+
+        button {
+            padding: 15px 40px;
+            font-size: 20px;
+            background: #cc33ff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #8a2be2;
+            margin-top: 10px;
+        }
+
+        button:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #8a2be2;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>💜 隠者の念写修行 💜</h1>
+
+    <div class="instructions">
+        ターゲットを <span class="key-hint">スクショ（Win＋Shift＋S）</span> して<br>
+        <span class="key-hint">Ctrl + V</span> で念写（貼り付け）ッ！
+    </div>
+
+    <div id="game-container">
+        <div id="focus-lines"></div>
+        <div id="target">☆🐝</div>
+        <div id="result-area">
+            カメラを叩き壊す覚悟でペーストォォォ～ッ！
+        </div>
+    </div>
+
+    <div id="ui">
+        <button onclick="startGame()">修行開始（念写！）</button>
+    </div>
+
+    <div id="shout-overlay">
+        <div class="togetoge">
+            <div class="shout-text" id="shout-content">念写成功ッ！！</div>
+        </div>
+    </div>
+
+    <div id="title-card">
+        <div class="title-label">称号取得ッ！</div>
+        <div class="title-name" id="title-display">---</div>
+    </div>
+
+    <script>
+        const target = document.getElementById('target');
+        const resultArea = document.getElementById('result-area');
+        const shoutOverlay = document.getElementById('shout-overlay');
+        const shoutContent = document.getElementById('shout-content');
+        const focusLines = document.getElementById('focus-lines');
+        const titleCard = document.getElementById('title-card');
+        const titleDisplay = document.getElementById('title-display');
+
+        const targetList = ["☆🐝", "🏰", "⌛", "👤", "🐦", "💛"];
+        let startTime;
+
+        function startGame() {
+            resultArea.innerHTML = "見えた瞬間にスクショしてCtrl+Vだッ！";
+            shoutOverlay.classList.remove('show-shout');
+            titleCard.classList.remove('show-title');
+            focusLines.style.display = 'none';
+            target.style.display = 'none';
+            
+            const randomTarget = targetList[Math.floor(Math.random() * targetList.length)];
+            target.innerText = randomTarget;
+
+            // 1〜3秒後にランダム出現
+            setTimeout(() => {
+                const containerWidth = document.getElementById('game-container').offsetWidth;
+                const containerHeight = document.getElementById('game-container').offsetHeight;
+                
+                const x = Math.random() * (containerWidth - 160);
+                const y = Math.random() * (containerHeight - 160);
+                
+                target.style.left = x + "px";
+                target.style.top = y + "px";
+                target.style.display = "block";
+                startTime = Date.now();
+
+                // 2秒間だけ表示
+                setTimeout(() => {
+                    target.style.display = "none";
+                }, 2000);
+            }, 1000 + Math.random() * 2000);
+        }
+
+        window.addEventListener('paste', (event) => {
+            const items = event.clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf("image") !== -1) {
+                    const blob = items[i].getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const speed = ((Date.now() - startTime) / 1000).toFixed(2);
+                        resultArea.innerHTML = `<img src="${e.target.result}">`;
+                        showShoutEffect(speed);
+                    };
+                    reader.readAsDataURL(blob);
+                }
+            }
+        });
+
+        function showShoutEffect(speed) {
+            focusLines.style.display = 'block';
+
+            if (speed < 10) {
+                shoutContent.innerHTML = `念写成功ッ！！<br><span style="font-size:20px">${speed}秒ッ！<br>きさま！見ているなッ！</span>`;
+            } else {
+                shoutContent.innerHTML = `念写完了ッ！<br><span style="font-size:20px">${speed}秒！<br>やはり…おれの居場所を感付いたな…</span>`;
+            }
+
+            let titleName = "";
+            let cardColor = "";
+            if (speed <= 4) {
+                titleName = "「白金の星」級の反応速度ッ！";
+                cardColor = "#00ffff";
+            } else if (speed <= 8) {
+                titleName = "「隠者の紫」並み！正確な念写だ。";
+                cardColor = "#cc33ff";
+            } else {
+                titleName = "「オロロォ～ン！オレのカメラがァァァ！」";
+                cardColor = "#ff4500";
+            }
+
+            titleDisplay.innerText = titleName;
+            titleCard.style.borderLeft = `15px solid ${cardColor}`;
+            titleCard.classList.add('show-title');
+            shoutOverlay.classList.add('show-shout');
+
+            setTimeout(() => {
+                shoutOverlay.classList.remove('show-shout');
+                titleCard.classList.remove('show-title');
+                focusLines.style.display = 'none';
+            }, 4000);
+        }
+    </script>
+</body>
+</html>

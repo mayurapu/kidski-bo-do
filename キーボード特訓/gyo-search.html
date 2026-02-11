@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>【念修行】凝（ギョウ）で『隠』を見破れッ！</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0d0d0d;
+            color: #fff;
+            font-family: "UD Digi Kyokasho N-R", "Kosugi Maru", sans-serif;
+            text-align: center;
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        h1 {
+            color: #00ffcc;
+            text-shadow: 0 0 10px #00ffcc;
+            margin-top: 20px;
+        }
+
+        /* 修行エリア */
+        #field {
+            position: relative;
+            width: 90vw;
+            height: 60vh;
+            margin: 20px auto;
+            border: 4px solid #444;
+            background: #111;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .target {
+            position: absolute;
+            font-size: 24px;
+            color: #111; /* 背景と同じ色で隠す */
+            user-select: text; /* 検索対象にする */
+            padding: 10px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        /* お宝を一番手前に配置 */
+        .treasure {
+            z-index: 100 !important;
+        }
+
+        .miss {
+            z-index: 1;
+        }
+
+        /* ★成功時のGET!!演出 */
+        #success-overlay {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 150px;
+            font-weight: 900;
+            color: #ffff00;
+            text-shadow: 0 0 20px #ff0000, 5px 5px 0 #000;
+            z-index: 2000;
+            pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .show-success {
+            transform: translate(-50%, -50%) scale(1) !important;
+        }
+
+        /* オーラ演出 */
+        #eye-aura {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none;
+            box-shadow: inset 0 0 100px #00ffcc;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .show-aura { opacity: 1; animation: aura-pulse 1s infinite alternate; }
+        @keyframes aura-pulse {
+            from { box-shadow: inset 0 0 100px #00ffcc; }
+            to { box-shadow: inset 0 0 150px #00ffcc, inset 0 0 300px rgba(0, 255, 204, 0.4); }
+        }
+
+        .instructions {
+            background: #222;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #00ffcc;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body onload="initGyo()">
+
+    <h1>🕸️ 念修行：『凝（ギョウ）』で『隠（イン）』を見破れッ！ 🕸️</h1>
+
+    <div id="eye-aura"></div>
+    <div id="success-overlay">GET!!</div>
+
+    <div class="instructions">
+        <span style="color:#ff00ff; font-weight:bold;">Ctrl + F</span> であぶり出し、<span style="color:#ffff00; font-weight:bold;">クリック</span>で掴み取れ！<br>
+        ヒント：お宝の名前はCTRL＋C→CTRL＋V　コピペをしてみよう！
+　　　　お宝：<span id="hint-word" style="color:#00ffcc; font-weight:bold;">???</span>
+    </div>
+
+    <div style="font-size: 24px; color: #00ffcc; margin: 10px;">
+        見つけたお宝：<span id="score">0</span>
+    </div>
+
+    <div id="field"></div>
+
+    <button onclick="resetGame()" style="padding:10px 20px; cursor:pointer; font-weight:bold;">リセット</button>
+
+    <script>
+        let score = 0;
+        const items = ["緋色の眼", "幻影旅団", "ジン", "賢者のアクアマリン", "ハンターライセンス", "一坪の海岸線"];
+        let currentTarget = "";
+        let isSuccessProcessing = false;
+
+        const field = document.getElementById('field');
+        const scoreDisplay = document.getElementById('score');
+        const hintWordDisplay = document.getElementById('hint-word');
+        const eyeAura = document.getElementById('eye-aura');
+        const successOverlay = document.getElementById('success-overlay');
+
+        function initGyo() {
+            field.innerHTML = "";
+            isSuccessProcessing = false;
+            currentTarget = items[Math.floor(Math.random() * items.length)];
+            hintWordDisplay.textContent = currentTarget;
+
+            // お宝を生成（1つ）
+            createItem(currentTarget, true);
+
+            // ハズレを生成（120個）
+            for (let i = 0; i < 120; i++) {
+                createItem("ハズレの石ころ", false);
+            }
+        }
+
+        function createItem(text, isCorrect) {
+            const span = document.createElement('span');
+            span.className = 'target ' + (isCorrect ? 'treasure' : 'miss');
+            span.textContent = text;
+            span.style.left = (5 + Math.random() * 80) + "%";
+            span.style.top = (5 + Math.random() * 80) + "%";
+            
+            // ★クリック判定を追加！
+            span.onclick = () => {
+                if (isSuccessProcessing) return;
+                
+                if (isCorrect) {
+                    handleSuccess();
+                } else {
+                    alert("それはただの石ころだ...");
+                }
+            };
+
+            field.appendChild(span);
+        }
+
+        function handleSuccess() {
+            isSuccessProcessing = true;
+            successOverlay.classList.add('show-success');
+
+            setTimeout(() => {
+                successOverlay.classList.remove('show-success');
+                score++;
+                scoreDisplay.textContent = score;
+                // 検索ハイライトを解除
+                window.getSelection().removeAllRanges();
+                initGyo();
+            }, 1200);
+        }
+
+        // オーラ演出
+        window.addEventListener('blur', () => eyeAura.classList.add('show-aura'));
+        window.addEventListener('focus', () => {
+            setTimeout(() => eyeAura.classList.remove('show-aura'), 1000);
+        });
+
+        function resetGame() {
+            score = 0;
+            scoreDisplay.textContent = score;
+            initGyo();
+        }
+    </script>
+</body>
+</html>

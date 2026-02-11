@@ -1,0 +1,784 @@
+
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>おしゃべり！母音＆ローマ字モンスター</title>
+    <style>
+        body {
+            font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; margin: 0; padding: 20px; overflow-y: auto;
+            transition: background-color 1s ease;
+            position: relative;
+        }
+
+        #game-container {
+            text-align: center; background: white; padding: 30px;
+            border-radius: 30px; box-shadow: 0 15px 40px rgba(255, 105, 180, 0.3);
+            width: 700px; position: relative; margin-bottom: 40px;
+        }
+
+        /* コンボ表示のスタイル */
+        #combo-display {
+            position: absolute; top: -10px; right: 20px;
+            font-size: 32px; font-weight: bold; color: #ff1493;
+            text-shadow: 2px 2px 0 white; opacity: 0;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none; z-index: 15;
+        }
+        .combo-active { opacity: 1 !important; transform: scale(1.2) rotate(10deg); }
+
+        #speech-bubble { font-size: 1.4em; font-weight: bold; color: #ff1493; height: 1.5em; margin-bottom: 10px; }
+
+        #monster-area {
+            height: 220px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            margin-bottom: 10px; position: relative;
+        }
+
+        #evolution-flash {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; border-radius: 30px; opacity: 0; pointer-events: none;
+            z-index: 10;
+        }
+        .flash-active { animation: flash-anim 0.8s ease-out; }
+        @keyframes flash-anim {
+            0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; }
+        }
+
+        #evolution-banner {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 80px; font-weight: bold; color: #ff1493; text-shadow: 3px 3px 0 white;
+            white-space: nowrap; opacity: 0; pointer-events: none; z-index: 11;
+        }
+        .banner-active { animation: banner-anim 1.5s ease-in-out; }
+        @keyframes banner-anim {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            30% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+        }
+
+        #monster {
+            width: 40px; height: 100px; background-color: #ddd;
+            transition: all 0.3s ease-in-out;
+            border-radius: 10px; position: relative;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 2;
+        }
+        #monster-shadow {
+            width: 50px; height: 10px; background: rgba(0,0,0,0.1);
+            border-radius: 50%; margin-top: 15px;
+            transition: all 0.3s ease-in-out;
+            filter: blur(2px);
+        }
+
+        .eye { position: absolute; top: 25%; width: 10px; height: 10px; background: #333; border-radius: 50%; }
+        .eye-l { left: 20%; } .eye-r { right: 20%; }
+        .mouth { position: absolute; bottom: 20%; width: 20px; height: 10px; border-bottom: 3px solid #333; border-radius: 0 0 10px 10px; }
+
+        .eye-closed { height: 2px !important; border-radius: 0 !important; }
+        .eye-big { width: 15px !important; height: 15px !important; }
+        .mouth-open { height: 15px !important; background: #333 !important; border-radius: 50% !important; }
+        .mouth-flat { border-bottom: 3px solid #333 !important; border-radius: 0 !important; height: 0 !important; }
+ /* --- 追加パーツのデザイン --- */
+        /* 腕の基本 */
+        .arm {
+            position: absolute; width: 25px; height: 10px;
+            background-color: inherit; /* モンスターと同じ色にする */
+            border: 2px solid rgba(0,0,0,0.1); border-radius: 5px;
+            top: 50%; z-index: -1;
+        }
+        .arm-l { left: -20px; transform: rotate(-20deg); }
+        .arm-r { right: -20px; transform: rotate(20deg); }
+
+        /* 羽の基本 */
+        .wing {
+            position: absolute; width: 40px; height: 30px;
+            background-color: #fff; opacity: 0.7;
+            border-radius: 50% 50% 0 50%; top: 20%; z-index: -2;
+        }
+        .wing-l { left: -35px; transform: rotate(-30deg); }
+        .wing-r { right: -35px; transform: rotate(30deg); border-radius: 50% 50% 50% 0; }
+        /* ----------------------- */
+        /* 進化クラス（そのまま） */
+        .lv0 { width: 30px !important; height: 100px !important; }
+        .lv1 { width: 80px !important; height: 80px !important; border-radius: 50% !important; }
+        .lv2 { width: 80px !important; height: 80px !important; transform: skew(15deg); border-radius: 5px !important; }
+        .lv3 { width: 100px !important; height: 100px !important; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); border-radius: 0 !important; }
+        .lv4 { width: 150px !important; height: 80px !important; border-radius: 20px !important; }
+        .lv5 { width: 120px !important; height: 120px !important; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }
+        .lv6 { width: 100px !important; height: 100px !important; transform: rotate(45deg); border-radius: 0 !important; }
+        .lv7 { width: 120px !important; height: 120px !important; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+        .lv8 { border: 8px double #ff1493 !important; width: 140px !important; height: 140px !important; border-radius: 30% !important; }
+        .lv9 { width: 150px !important; height: 150px !important; box-shadow: 0 0 40px #ff69b4; border-radius: 50% !important; }
+        .lv10 { animation: grow 1s infinite alternate; filter: hue-rotate(10deg); border-radius: 20px !important; }
+        .legendary { box-shadow: 0 0 60px #ffd700 !important; border: 10px gold double !important; transform: scale(1.1) !important; }
+
+        .rare-effect {
+            animation: rainbow 2s linear infinite !important;
+            box-shadow: 0 0 30px #fff, 0 0 50px #ff00de !important;
+        }
+        @keyframes rainbow { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+        @keyframes grow { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+        #target-display { font-size: 60px; color: #ffb6c1; font-weight: bold; line-height: 1.2; height: 120px; }
+        #target-kana { font-size: 30px; color: #ff69b4; }
+        .next-key { color: #ff1493; transform: scale(1.1); display: inline-block; }
+        .done-key { color: #eee; }
+
+        #keyboard { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: 15px; }
+        .row { display: flex; gap: 5px; }
+        .key { width: 45px; height: 45px; border: 2px solid #ffecf0; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-weight: bold; background: #fafafa; color: transparent; }
+        .key.visible { color: #ffc0cb; }
+        .key.target-hint { border-color: #ff69b4; color: #ff69b4; background-color: #fff0f5; }
+        /* 正解した時に一瞬つけるクラス */
+        .key.press-correct {
+            background-color: #ff69b4 !important; /* ピンク色に光る */
+            color: white !important;
+            transform: translateY(4px); /* 少し沈む */
+            transition: none; /* 押した瞬間はパッと変える */
+            box-shadow: none; /* 影を消して押し込んだ感を出す */}
+        #name-form, #final-screen { display: none; }
+        input { width: 80%; margin: 5px; padding: 10px; border: 2px solid #ffb6c1; border-radius: 10px; font-size: 14px; }
+        button { background: #ff69b4; color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        
+        .result-box { background: #fffaf0; border: 3px solid #ffb6c1; border-radius: 20px; padding: 20px; margin-top: 10px; text-align: left; }
+        .res-item { color: #ff1493; font-weight: bold; font-size: 0.9em; margin-top: 8px; }
+        .res-val { color: #333; border-bottom: 1px dashed #ffb6c1; padding-bottom: 2px; font-size: 1.1em; margin-bottom: 5px; }
+
+        #collection-container { width: 700px; background: white; border-radius: 30px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 15px; margin-top: 15px; }
+        .mini-monster { 
+            border: 2px solid #ffecf0; border-radius: 15px; padding: 10px; text-align: center; font-size: 10px; background: #fffafb;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;
+        }
+        .mini-shape { transform: scale(0.4); margin: -20px 0; }
+        .rare-badge { position: absolute; top: 5px; right: 5px; background: linear-gradient(45deg, gold, orange); color: white; font-size: 8px; padding: 2px 5px; border-radius: 10px; font-weight: bold; }
+
+        #reward-area { background: #fff0f5; border: 2px dashed #ff69b4; border-radius: 20px; padding: 15px; margin-bottom: 20px; text-align: center; }
+        .reward-badge { font-size: 1.2em; font-weight: bold; color: #ff1493; margin-bottom: 5px; }
+        .reward-progress { color: #666; font-size: 0.9em; }
+
+        #story-overlay {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95); padding: 15px 25px; border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(255, 105, 180, 0.2);
+            font-size: 1.1em; color: #ff1493; font-weight: bold; line-height: 1.6;
+            text-align: center; max-width: 600px; z-index: 1000;
+            opacity: 1; transition: opacity 1s ease-out;
+            border: 2px solid #ffb6c1;
+        }
+        #story-overlay.hidden { opacity: 0; pointer-events: none; }
+        
+        /* ノーミス限定：神々しいオーラ */
+        .god-ray {
+            box-shadow: 0 0 80px #fff, 0 0 100px #ffd700, 0 0 120px #ff00de !important;
+            animation: god-shine 2s infinite alternate !important;
+            border: 5px solid #fff !important;
+        }
+        @keyframes god-shine {
+            from { filter: brightness(1) contrast(1.2) drop-shadow(0 0 10px gold); }
+            to { filter: brightness(1.5) contrast(1.5) drop-shadow(0 0 30px white); }
+        }
+
+/* --- 背景デザインの定義 --- */
+        /* レベル1：草原 */
+        body.stage1-bg {
+            background: linear-gradient(#87CEEB 60%, #32CD32 60%);
+        }
+        body.stage1-bg::before { content: "☘️ 🌷 ☘️ ☘️ 🌷"; position: absolute; bottom: 10%; font-size: 30px; opacity: 0.5; letter-spacing: 50px; }
+
+        /* レベル2：町 */
+        body.stage2-bg {
+            background: linear-gradient(#FF8C00 50%, #808080 50%);
+        }
+        body.stage2-bg::before { content: "🏘️ 🏢 🏠 🏘️ 🏢"; position: absolute; bottom: 42%; font-size: 40px; opacity: 0.7; letter-spacing: 30px; }
+
+        /* レベル3：ダンジョン */
+        body.stage3-bg {
+            background: radial-gradient(circle, #4b4b4b, #000000);
+        }
+        body.stage3-bg::before { content: "🔥 💀 🔥 💀 🔥"; position: absolute; top: 20%; font-size: 30px; opacity: 0.4; letter-spacing: 100px; } 
+        body.stage4-bg { background: linear-gradient(45deg, #000, #4b0082); color: white; }   
+</style>
+</head>
+<body>
+
+<div id="story-overlay">
+    お腹ぺこぺこのモンスターがいます。<br>
+    母音をあげて、たくさんおしゃべりさせてあげてね！
+</div>
+
+<div id="game-container">
+    <div id="combo-display">0 COMBO!</div>
+    <div id="evolution-flash"></div>
+    <div id="evolution-banner">LEVEL UP!</div>
+
+    <div id="play-screen">
+        <div id="speech-bubble">はじまるっぴ！</div>
+        <div id="monster-area">
+            <div id="monster" class="lv0">
+                <div class="eye eye-l"></div><div class="eye eye-r"></div>
+                <div class="mouth"></div>
+                <div id="arm-l" class="arm arm-l" style="display:none;"></div>
+                <div id="arm-r" class="arm arm-r" style="display:none;"></div>
+                <div id="wing-l" class="wing wing-l" style="display:none;"></div>
+                <div id="wing-r" class="wing wing-r" style="display:none;"></div>
+                </div>
+            <div id="monster-shadow"></div>
+        </div>
+        <div id="target-display">
+            <div id="target-letters"></div>
+            <div id="target-kana"></div>
+        </div>
+        <div id="score-board" style="color:#ff69b4; font-weight:bold; margin: 10px 0;"></div>
+        <div id="keyboard">
+            <div class="row" id="row1"></div><div class="row" id="row2"></div><div class="row" id="row3"></div>
+        </div>
+    </div>
+
+    <div id="name-form">
+        <div id="form-monster-container" style="height:180px; display:flex; flex-direction:column; justify-content:center; align-items:center;"></div>
+        <h2 id="name-form-title" style="color: #ff1493;">✨ しんか おめでとう！</h2>
+        <input type="text" id="m-name" placeholder="なまえを つけてね"><br>
+        <input type="text" id="m-prof" placeholder="どんな せいかくかな？"><br>
+        <input type="text" id="m-skill" placeholder="どんな のうりょくが あるかな？"><br>
+        <button id="go-stage3-btn">なまえを決定して 修行にいく！</button>
+    </div>
+
+    <div id="final-screen">
+        <h2 id="res-shogo" style="color: #ff1493; margin: 0;"></h2>
+        <div id="final-monster-container" style="height:180px; display:flex; flex-direction:column; justify-content:center; align-items:center;"></div>
+        <div class="result-box">
+            <div class="res-item">【なまえ】</div><div id="res-name" class="res-val"></div>
+            <div class="res-item">【せいかく】</div><div id="res-prof" class="res-val"></div>
+            <div class="res-item">【のうりょく】</div><div id="res-skill" class="res-val"></div>
+            <div class="res-item">🕒 【そだてた時間】</div><div id="res-time" class="res-val"></div>
+            <div id="letter-box" style="background: #fff; border: 2px dashed #ff69b4; border-radius: 15px; padding: 15px; margin-top: 15px; color: #ff1493; font-weight: bold; font-style: italic;">
+            </div>
+        </div>
+        <button onclick="location.reload()">もういっかい そだてる</button>
+    </div>
+</div>
+
+<div id="custom-word-form" style="display: none;">
+        <h2 style="color: #ff1493;">🎓 モンスターに言葉を教える</h2>
+        <p style="color: #666; font-size: 0.9em;">教えた言葉は次から「ステージ3」で出るようになるっぴ！</p>
+        <input type="text" id="new-kana" placeholder="教える言葉（例：おはよー）"><br>
+        <input type="text" id="new-roma" placeholder="打ち方（例：OHAYO-）"><br>
+        <button id="save-word-btn">言葉を保存してタイトルへ</button>
+    </div>
+
+<div id="collection-container">
+    <h3 style="color: #ff69b4; margin-top: 0;">💖 歴代モンスターずかん</h3>
+    <div id="reward-area">
+        <div id="reward-badge" class="reward-badge">称号：たまごブリーダー🥚</div>
+        <div id="reward-progress" class="reward-progress">あと 3匹 で新しいご褒美だっぴ！</div>
+    </div>
+    <div id="collection-grid" class="collection-grid"></div>
+    <button onclick="clearCollection()" style="background: #ccc; font-size: 10px; padding: 5px 10px; margin-top: 20px; border-radius: 10px;">ずかんをリセット</button>
+</div>
+
+<script>
+    const monster = document.getElementById('monster');
+    const shadow = document.getElementById('monster-shadow');
+    const eyeL = document.querySelector('.eye-l');
+    const eyeR = document.querySelector('.eye-r');
+    const mouth = document.querySelector('.mouth');
+    const speech = document.getElementById('speech-bubble');
+    const scoreBoard = document.getElementById('score-board');
+    const targetLettersEl = document.getElementById('target-letters');
+    const targetKanaEl = document.getElementById('target-kana');
+    const storyOverlay = document.getElementById('story-overlay');
+    const flashEl = document.getElementById('evolution-flash');
+    const bannerEl = document.getElementById('evolution-banner');
+    const comboDisplay = document.getElementById('combo-display');
+
+    const vowels = { 'A':'あ','I':'い','U':'う','E':'え','O':'お' };
+    const romaTable = { 
+        'KA':'か','KI':'き','KU':'く','KE':'け','KO':'こ',
+        'SA':'さ','SI':'し','SU':'す','SE':'せ','SO':'そ',
+        'TA':'た','TI':'ち','TU':'つ','TE':'て','TO':'と',
+        'NA':'な','NI':'に','NU':'ぬ','NE':'ね','NO':'の',
+        'HA':'は','HI':'ひ','HU':'ふ','HE':'へ','HO':'ほ',
+        'MA':'ま','MI':'み','MU':'む','ME':'め','MO':'も',
+        'YA':'や','YU':'ゆ','YO':'よ',
+        'RA':'ら','RI':'り','RU':'る','RE':'れ','RO':'ろ',
+        'WA':'わ','WO':'を','NN':'ん' 
+    };
+    
+    const wordList = [
+        {k:"りんご",r:"RINNGO"},{k:"ねこ",r:"NEKO"},{k:"うみ",r:"UMI"},{k:"ほし",r:"HOSI"},
+        {k:"はな",r:"HANA"},{k:"すいか",r:"SUIKA"},{k:"くるま",r:"KURUMA"},{k:"とまと",r:"TOMATO"},
+        {k:"いちご",r:"ITIGO"},{k:"さかな",r:"SAKANA"},{k:"やま",r:"YAMA"},{k:"ゆき",r:"YUKI"}
+    ];
+
+    const sentenceList = [
+       {k:"伝説のブリーダーだっぴ！", r:"DENNSETSU NO BURI-DA- DAPPI!"},
+       {k:"タイピングの神様だね！", r:"TAIPINGU NO KAMISAMA DANE!"},
+       {k:"これからもよろしくね！", r:"KOREKARAMO YOROSIKUNE!"}
+    ];
+    
+    // 文字ごとの反応ライブラリ
+    const letterReactions = {
+        'A': "「あ」まいもの大好きだっぴ！",
+        'I': "「い」ちごはあまいっぴ！",
+        'U': "「う」みの幸が食べたいっぴ！",
+        'E': "「え」んぴつは食べちゃダメだっぴ！",
+        'O': "「お」なかいっぱいになってきた♡",
+        'K': "「か」きくけこ！かっこいいっぴ！",
+        'S': "「さ」わやかだっぴ！",
+        'N': "「ん」？なにか呼んだっぴ？"
+    };
+
+    const keys = [['Q','W','E','R','T','Y','U','I','O','P'],['A','S','D','F','G','H','J','K','L'],['Z','X','C','V','B','N','M']];
+    const evolutionMessages = ["ただのぼうだっぴ…", "まるくなったっぴ！", "おしゃれだわ〜ん♡", "さんかくだっぴ！", "しかくだっぴ！", "きりっとしてきたっぴ！", "まわってるわ〜ん♡", "きらきらだっぴ！", "ゴージャスだわ〜ん♡", "もうすぐ究極進化だっぴ！", "うちゅういちだっぴー！"];
+
+    let totalCount = 0, stageCount = 0, stage = 1, typedIndex = 0, combo = 0;
+    let currentTargetRoma = "", currentTargetKana = "";
+    let startTime, monsterName = "", speechTimer;
+    let isRare = false;
+    let missCount = 0; // ミスした回数を数える
+
+    // キーボード作成
+    keys.forEach((row, i) => {
+        const rowEl = document.getElementById(`row${i+1}`);
+        row.forEach(k => {
+            const el = document.createElement('div');
+            el.className = 'key' + (vowels[k] ? ' visible' : '');
+            el.id = 'key-' + k;
+            el.innerText = k;
+            rowEl.appendChild(el);
+        });
+    });
+
+    function randomAppearance() {
+        if (stage >= 2 && !isRare && Math.random() < 0.005) {
+            isRare = true;
+            monster.classList.add('rare-effect');
+        }
+        const colors = ['#FF69B4', '#FFD700', '#ADFF2F', '#00BFFF', '#BA55D3', '#FF4500', '#00FA9A', '#FFB6C1'];
+        monster.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        
+        // パーツのランダム表示
+        const armL = document.getElementById('arm-l');
+        const armR = document.getElementById('arm-r');
+        const wingL = document.getElementById('wing-l');
+        const wingR = document.getElementById('wing-r');
+
+        // 一旦全部消す
+        armL.style.display = armR.style.display = wingL.style.display = wingR.style.display = 'none';
+
+        if (stage >= 2) {
+            // 50%の確率で腕が生える
+            if (Math.random() > 0.5) {
+                armL.style.display = armR.style.display = 'block';
+            }
+            // 30%の確率で羽が生える
+            if (Math.random() > 0.7) {
+                wingL.style.display = wingR.style.display = 'block';
+            }
+        }
+
+        eyeL.className = 'eye eye-l'; eyeR.className = 'eye eye-r'; mouth.className = 'mouth';
+        const eTypes = ['', 'eye-closed', 'eye-big'];
+        const eType = eTypes[Math.floor(Math.random() * eTypes.length)];
+        if (eType) { eyeL.classList.add(eType); eyeR.classList.add(eType); }
+        const mTypes = ['', 'mouth-open', 'mouth-flat'];
+        const mType = mTypes[Math.floor(Math.random() * mTypes.length)];
+        if (mType) mouth.classList.add(mType);
+
+        shadow.style.width = (monster.offsetWidth + 20) + "px";
+    }
+
+    // おしゃべりロジックの強化
+    function monsterSpeak(type, key = '') {
+        clearTimeout(speechTimer);
+        let msg = "";
+
+        if (type === 'eat') {
+            // 文字ごとの反応があるかチェック
+            if (letterReactions[key]) {
+                msg = letterReactions[key];
+            } else if (combo >= 10) {
+                msg = "神速だっぴ！すごすぎるっぴ！";
+            } else if (combo >= 5) {
+                msg = "ノリノリだっぴ！コンボ最高！";
+            } else {
+                msg = "パクッ！おいしいっぴ！";
+            }
+        } else if (type === 'miss') {
+            msg = "にがーい！ぺっぺっだっぴ！";
+        } else if (type === 'evolution') {
+            const lv = Math.floor(totalCount / 10);
+            msg = evolutionMessages[lv > 10 ? 10 : lv];
+        }
+
+        speech.innerText = msg;
+    }
+
+   function playEvolutionEffect(message, nextStage) {
+        flashEl.classList.add('flash-active');
+        bannerEl.innerText = message;
+        bannerEl.classList.add('banner-active');
+        
+        setTimeout(() => {
+            flashEl.classList.remove('flash-active');
+            bannerEl.classList.remove('banner-active');
+            
+            // --- ここで背景を切り替える ---
+            if (nextStage === 2) {
+                document.body.className = 'stage2-bg'; // ステージ2の背景へ！
+            } else if (nextStage === 3) {
+                document.body.className = 'stage3-bg'; // ステージ3の背景へ！
+            } else if (nextStage === 4) {
+            document.body.className = 'stage3-bg'; // 隠しはとりあえず3と同じ
+            }
+            
+            nextStep();
+        }, 1500);
+    }
+
+    function nextStep() {
+        typedIndex = 0;
+        if (stage === 1) {
+            currentTargetRoma = Object.keys(vowels)[Math.floor(Math.random() * 5)];
+            currentTargetKana = vowels[currentTargetRoma];
+            scoreBoard.innerHTML = `たべたかず: <span id="count">${totalCount}</span> / 50`;
+        } else if (stage === 2) {
+            const romaKeys = Object.keys(romaTable);
+            currentTargetRoma = romaKeys[Math.floor(Math.random() * romaKeys.length)];
+            currentTargetKana = romaTable[currentTargetRoma];
+            scoreBoard.innerHTML = `第２ステージ！: <span id="count">${stageCount}</span> / 60`;
+        } else {
+            const word = wordList[Math.floor(Math.random() * wordList.length)];
+            currentTargetRoma = word.r;
+            currentTargetKana = word.k;
+            scoreBoard.innerHTML = `最終ステージ：修行: <span id="count">${stageCount}</span> / 10`;
+        }
+        renderTarget();
+    }
+
+    function renderTarget() {
+        targetLettersEl.innerHTML = "";
+        for (let i = 0; i < currentTargetRoma.length; i++) {
+            const span = document.createElement('span');
+            span.innerText = currentTargetRoma[i];
+            span.className = (i < typedIndex ? 'done-key' : (i === typedIndex ? 'next-key' : ''));
+            targetLettersEl.appendChild(span);
+        }
+        targetKanaEl.innerText = `（${currentTargetKana}）`;
+        
+        // キーボードの見た目を更新する関数を呼ぶっぴ！
+        updateKeyboard();
+    }
+  /* ▼ キーボードの表示を更新する関数（優先順位をつけたよ！） */
+    function updateKeyboard() {
+        const nextChar = currentTargetRoma[typedIndex]; // 次に打つ文字
+        const boins = ['A', 'I', 'U', 'E', 'O']; // 母音リスト
+
+        // 一旦すべてのキーのスタイルをリセットするっぴ！
+        document.querySelectorAll('.key').forEach(keyEl => {
+            keyEl.classList.remove('target-hint');
+            
+            // 基本の枠線に戻す
+            keyEl.style.borderColor = "";
+            keyEl.style.borderWidth = "";
+            keyEl.style.color = "";
+            keyEl.style.backgroundColor = ""; // 背景もリセット
+            keyEl.style.boxShadow = "";       // 光もリセット
+        });
+
+        // 1. 【母音の表示】第2ステージ以降、母音（AIUEO）は「薄いピンクの枠」で常に出しておく
+        if (stage >= 2) {
+            boins.forEach(b => {
+                const boinKeyEl = document.getElementById('key-' + b);
+                if (boinKeyEl) {
+                    boinKeyEl.style.borderColor = "#ffc0cb"; // 薄いピンクの枠
+                    boinKeyEl.style.color = "#ffc0cb";       // 文字も少し薄く
+                    boinKeyEl.style.borderWidth = "2px";
+                }
+            });
+        }
+
+        // 2. 【最優先：次に打つキー】ここを「濃いピンク」＋「背景色」で超目立たせる！
+        const nextKeyEl = document.getElementById('key-' + nextChar);
+        if (nextKeyEl) {
+            nextKeyEl.classList.add('target-hint');
+            nextKeyEl.style.borderColor = "#ff1493";     // 濃いピンク（ディープピンク）
+            nextKeyEl.style.borderWidth = "4px";         // 枠を太く！
+            nextKeyEl.style.color = "#ffffff";           // 文字を白抜きに！
+            nextKeyEl.style.backgroundColor = "#ff1493"; // 背景を塗りつぶし！
+            nextKeyEl.style.boxShadow = "0 0 15px #ff1493"; // オーラを出す！
+        }
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (!storyOverlay.classList.contains('hidden')) storyOverlay.classList.add('hidden');
+        if (document.getElementById('name-form').style.display === 'block' || document.getElementById('final-screen').style.display === 'block') return;
+        if (bannerEl.classList.contains('banner-active')) return;
+
+        if (!startTime) startTime = new Date();
+        const key = e.key.toUpperCase();
+        
+        // --- ここから追加：キーが光る演出 ---
+        const keyEl = document.getElementById('key-' + key);
+        if (keyEl && key === currentTargetRoma[typedIndex]) {
+            keyEl.classList.add('press-correct');
+            // 0.1秒後に元の色に戻す
+            setTimeout(() => {
+                keyEl.classList.remove('press-correct');
+            }, 100);
+        }
+        if (key === currentTargetRoma[typedIndex]) {
+            typedIndex++;
+            if (typedIndex >= currentTargetRoma.length) {
+                // 正解した時
+                combo++;
+                updateComboDisplay();
+                
+                if (stage === 3) { 
+                    stageCount++; 
+                    speech.innerText = `「${currentTargetKana}！」`; 
+                } else { 
+                    totalCount++; 
+                    stageCount++; 
+                    // 文字の頭文字で反応を変える
+                    monsterSpeak('eat', currentTargetRoma[0]); 
+                }
+                
+                randomAppearance();
+                updateMonsterLv();
+                
+                if (stage === 1 && totalCount >= 50) {
+                    stage = 2; stageCount = 0;
+                    document.querySelectorAll('.key').forEach(k => k.classList.add('visible'));
+                    playEvolutionEffect("LEVEL UP!!", 2);
+                } else if (stage === 2 && stageCount >= 60) { showNameForm(); }
+                else if (stage === 3 && stageCount >= 10) { showFinalScreen(); }
+                else { setTimeout(nextStep, 200); }
+            } else { 
+                renderTarget(); 
+            }
+        } else if (key.length === 1 && /^[A-Z]$/.test(key)) {
+            missCount++; // ← ここを追加！ミスを数える
+            combo = 0;
+            updateComboDisplay();
+            monsterSpeak('miss');
+            speechTimer = setTimeout(() => { randomAppearance(); }, 800);
+        }
+    });
+
+    function updateComboDisplay() {
+        if (combo >= 2) {
+            comboDisplay.innerText = combo + " COMBO!";
+            comboDisplay.classList.add('combo-active');
+        } else {
+            comboDisplay.classList.remove('combo-active');
+        }
+    }
+
+    function updateMonsterLv() {
+        let lv = 0;
+        if (stage === 1) {
+            lv = Math.floor(totalCount / 10);
+            monster.className = 'lv' + (lv > 10 ? 10 : lv);
+            // ▼ 進化のタイミング（10, 20, 30問...）でメッセージを表示
+            if (totalCount % 10 === 0 && totalCount > 0) {
+                speech.innerText = evolutionMessages[lv > 10 ? 10 : lv];
+            }
+        } else if (stage === 2) {
+            monster.className = 'lv' + Math.floor(Math.random() * 11);
+            if (isRare) monster.classList.add('rare-effect');
+        } else {
+            monster.className = 'lv' + Math.floor(Math.random() * 11);
+            monster.classList.add('legendary');
+            if (isRare) monster.classList.add('rare-effect');
+        }
+    }
+
+    function showNameForm() {
+        document.getElementById('play-screen').style.display = 'none';
+        document.getElementById('name-form').style.display = 'block';
+        if (isRare) document.getElementById('name-form-title').innerText = "✨ 超・激レアしんか おめでとう！ ✨";
+        const container = document.getElementById('form-monster-container');
+        container.innerHTML = "";
+        const mClone = monster.cloneNode(true);
+        const sClone = shadow.cloneNode(true);
+        container.appendChild(mClone);
+        container.appendChild(sClone);
+    }
+
+   function showFinalScreen() {
+        const diff = (new Date() - startTime) / 1000;
+        const prof = document.getElementById('m-prof').value || "やさしい";
+        const skill = document.getElementById('m-skill').value || "なし";
+        const timeStr = `${Math.floor(diff/60)}分 ${(diff%60).toFixed(1)}秒`;
+        
+        let finalName = monsterName;
+        if (missCount === 0) {
+            finalName = "✨究極神✨ " + monsterName;
+            monster.classList.add('god-ray'); // 神々しく光らせる
+        }
+       
+        document.getElementById('res-name').innerText = monsterName + (isRare ? "（超レア）" : "");
+        document.getElementById('res-prof').innerText = prof;
+        document.getElementById('res-skill').innerText = skill;
+        document.getElementById('res-time').innerText = timeStr;
+        
+// --- 称号の決定（書き換え部分） ---
+        let shogo = "称号：☘️ のんびり育成名人";
+
+        if (missCount === 0 && maxCombo >= 100) {
+            shogo = "称号：🌌 伝説のパーフェクト・タイピング・ゴッド";
+        } else if (missCount === 0) {
+            shogo = "称号：🌟 奇跡のノーミス・マスター";
+        } else if (diff < 150) {
+            shogo = "称号：⚡️ 光速の進化神";
+        } else if (diff < 300) {
+            shogo = "称号：🔥 努力のタイピング王";
+        }
+
+        if (isRare) shogo = "👑 超レアの主！ " + shogo;
+        document.getElementById('res-shogo').innerText = shogo;
+        // --- ★ここから手紙の処理★ ---
+        const letters = [
+            `そだててくれてありがとうっピ！${prof}なぼくのこと、わすれないでね！`,
+            `キミのタイピング、かっこよかったっピ！${monsterName}より。`,
+            `修行できてうれしかったっピ！またあそぼうね！`,
+            `${skill}の力で、これからもキミを応援してるっぴ！`
+        ];
+        document.getElementById('letter-box').innerText = letters[Math.floor(Math.random() * letters.length)];
+        // ------------------------------
+
+        document.getElementById('play-screen').style.display = 'none';
+        document.getElementById('final-screen').style.display = 'block';
+        
+        const container = document.getElementById('final-monster-container');
+        container.innerHTML = "";
+        const mClone = monster.cloneNode(true);
+        const sClone = shadow.cloneNode(true);
+        container.appendChild(mClone);
+        container.appendChild(sClone);
+
+        const finalBtn = document.querySelector('#final-screen button');
+    if (count >= 10 && stage === 3) {
+        finalBtn.innerText = "伝説の試練に挑む！";
+        finalBtn.onclick = () => {
+            document.getElementById('final-screen').style.display = 'none';
+            document.getElementById('play-screen').style.display = 'block';
+            stage = 4; stageCount = 0; playEvolutionEffect("FINAL TEST!", 4);
+        };
+    } else if (stage === 4) {
+        finalBtn.innerText = "言葉を教えるっぴ！";
+        finalBtn.onclick = () => {
+            document.getElementById('final-screen').style.display = 'none';
+            document.getElementById('custom-word-form').style.display = 'block';
+        };
+    } else {
+        finalBtn.onclick = () => location.reload();
+    }
+
+        saveToCollection(monsterName, monster.className, monster.style.backgroundColor, isRare);
+    }
+
+   function saveToCollection(name, className, bgColor, rare) {
+        const collection = JSON.parse(localStorage.getItem('monsterCollection') || '[]');
+        
+        // 今のパーツの状態をメモする
+        const currentParts = {
+            armL: document.getElementById('arm-l').style.display,
+            armR: document.getElementById('arm-r').style.display,
+            wingL: document.getElementById('wing-l').style.display,
+            wingR: document.getElementById('wing-r').style.display,
+            eyeClass: eyeL.className,
+            mouthClass: mouth.className
+        };
+
+        collection.push({ name, className, bgColor, rare, parts: currentParts });
+        localStorage.setItem('monsterCollection', JSON.stringify(collection));
+        loadCollection();
+    }
+
+    function loadCollection() {
+        const grid = document.getElementById('collection-grid');
+        grid.innerHTML = "";
+        const collection = JSON.parse(localStorage.getItem('monsterCollection') || '[]');
+        const count = collection.length;
+        const badgeEl = document.getElementById('reward-badge');
+        const progressEl = document.getElementById('reward-progress');
+
+        if (count >= 10) { badgeEl.innerHTML = "称号：👑 伝説のゴッドブリーダー"; progressEl.innerText = "コンプリートだっぴ！"; }
+        else if (count >= 5) { badgeEl.innerHTML = "称号：🌟 一流ブリーダーだわ〜ん"; progressEl.innerText = `あと ${10-count} 匹で伝説だっぴ！`; }
+        else if (count >= 3) { badgeEl.innerHTML = "称号：💪 期待のブリーダー"; progressEl.innerText = `あと ${5-count} 匹で一流だっぴ！`; }
+        else { badgeEl.innerHTML = "称号：🥚 たまごブリーダー"; progressEl.innerText = `あと ${3-count} 匹で期待の星だっぴ！`; }
+
+        collection.forEach(m => {
+            const item = document.createElement('div');
+            item.className = 'mini-monster';
+            const rareClass = m.rare ? "rare-effect" : "";
+            const rareBadge = m.rare ? '<div class="rare-badge">ULTRA</div>' : '';
+            
+            // パーツの情報を読み込む（昔のデータでエラーにならないように `|| {}` をつける）
+            const p = m.parts || {};
+            
+            item.innerHTML = `
+                ${rareBadge}
+                <div class="mini-shape">
+                    <div class="${m.className} ${rareClass}" style="background-color:${m.bgColor}; width:40px; height:100px; border-radius:10px; position:relative;">
+                        <div class="${p.eyeClass || 'eye eye-l'}"></div>
+                        <div class="${p.eyeClass || 'eye eye-r'}"></div>
+                        <div class="${p.mouthClass || 'mouth'}"></div>
+                        <div class="arm arm-l" style="display:${p.armL || 'none'}"></div>
+                        <div class="arm arm-r" style="display:${p.armR || 'none'}"></div>
+                        <div class="wing wing-l" style="display:${p.wingL || 'none'}"></div>
+                        <div class="wing wing-r" style="display:${p.wingR || 'none'}"></div>
+                    </div>
+                </div>
+                <div style="margin-top:25px;"><b>${m.name}</b></div>
+            `;
+            grid.appendChild(item);
+        });
+    }
+
+    function clearCollection() {
+        if(confirm("ずかんを空っぽにするっぴ？")) {
+            localStorage.removeItem('monsterCollection');
+            loadCollection();
+        }
+    }
+
+    document.getElementById('go-stage3-btn').onclick = () => {
+        monsterName = document.getElementById('m-name').value || "名無しのモンスター";
+        document.getElementById('name-form').style.display = 'none';
+        document.getElementById('play-screen').style.display = 'block';
+        stage = 3; stageCount = 0;
+        playEvolutionEffect("TRAINING!!", 3);
+    };
+
+    // ★追加：言葉を保存するボタン
+    document.getElementById('save-word-btn').onclick = () => {
+        const k = document.getElementById('new-kana').value;
+        const r = document.getElementById('new-roma').value;
+        if (k && r) {
+            const myWords = JSON.parse(localStorage.getItem('myCustomWords') || '[]');
+            myWords.push({k, r});
+            localStorage.setItem('myCustomWords', JSON.stringify(myWords));
+             alert("言葉を教えたっぴ！");
+             location.reload();
+        }
+      };    
+
+    window.onload = () => {
+        // ▼ ここに「最初はステージ1の背景にする」命令を追加
+        document.body.className = 'stage1-bg'; 
+        
+        loadCollection();
+        nextStep();
+        setTimeout(() => { storyOverlay.classList.add('hidden'); }, 5000);
+    };
+</script>
+</body>
+</html>

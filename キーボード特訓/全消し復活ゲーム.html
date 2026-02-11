@@ -2,43 +2,51 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>【練習】ショートカット「守り」の修行！</title>
+  <title>【修行】削り取って直すッ！ショートカット修行</title>
   <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
   <style>
     body {
-      background-color: #2c3e50;
+      background-color: #1a0026;
       font-family: "UD Digi Kyokasho N-R", "Kosugi Maru", sans-serif;
       margin: 20px;
       text-align: center;
-      color: #ecf0f1;
+      color: #e0b0ff;
       overflow-x: hidden;
       transition: background-color 0.3s;
     }
-    body.danger-alert { background-color: #c0392b; }
+    /* 警告状態の背景（ガオン！な感じ） */
+    body.danger-alert { background-color: #4b0082; }
+
     h1 {
-      color: #f1c40f;
-      font-size: 24px;
-      border-bottom: 4px solid #f1c40f;
+      color: #cc33ff;
+      font-size: 28px;
+      text-shadow: 3px 3px 0px #000;
+      border-bottom: 4px solid #cc33ff;
       display: inline-block;
       margin-bottom: 10px;
     }
+
     .info-box {
-      background: rgba(255, 255, 255, 0.1);
-      border: 3px solid #f1c40f;
+      background: rgba(0, 0, 0, 0.5);
+      border: 3px solid #cc33ff;
       border-radius: 20px;
       padding: 10px;
       margin: 0 auto 10px;
       max-width: 600px;
+      box-shadow: 0 0 15px #cc33ff;
     }
+
     .mission-area {
       font-size: 26px;
       font-weight: bold;
       height: 70px;
       margin-top: 10px;
+      color: #fff;
     }
+
     #target-container {
-      background: #fff;
-      color: #333;
+      background: #000;
+      color: #fff;
       padding: 20px;
       border-radius: 15px;
       font-size: 45px;
@@ -48,23 +56,28 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 8px solid #bdc3c7;
+      border: 8px double #cc33ff;
+      box-shadow: inset 0 0 20px #cc33ff;
     }
+
     .input-zone {
       margin: 20px auto;
       width: 550px;
       position: relative;
     }
+
     .command-label {
-      background: #f1c40f;
-      color: #333;
+      background: #ffff00;
+      color: #000;
       font-weight: bold;
       font-size: 22px;
-      padding: 5px 15px;
+      padding: 8px 20px;
       border-radius: 10px 10px 0 0;
       display: inline-block;
-      box-shadow: 0 -3px 10px rgba(0,0,0,0.2);
+      box-shadow: 0 -3px 10px rgba(0,0,0,0.5);
+      border: 2px solid #000;
     }
+
     input#magic-input {
       font-size: 32px;
       padding: 20px;
@@ -72,10 +85,12 @@
       box-sizing: border-box;
       text-align: center;
       border-radius: 0 0 15px 15px;
-      border: 6px solid #f1c40f;
-      background: #ecf0f1;
+      border: 6px solid #ffff00;
+      background: #eee;
+      color: #000;
       outline: none;
     }
+
     #result-overlay {
       display: none;
       position: fixed;
@@ -86,29 +101,31 @@
       align-items: center;
       flex-direction: column;
     }
+
     .result-card {
       background: white;
       color: #333;
       padding: 40px;
       border-radius: 30px;
-      border: 10px solid #f1c40f;
+      border: 10px solid #cc33ff;
       text-align: center;
     }
-    .result-score { font-size: 80px; color: #e67e22; margin: 20px 0; display: block; }
+
+    .result-score { font-size: 80px; color: #cc33ff; margin: 20px 0; display: block; font-weight: 900; }
   </style>
 </head>
 <body onload="initGame()">
 
-  <h1>✨ ショートカット「守り」の修行 ✨</h1>
+  <h1>💜 修練：削り取って直すッ！ショートカット修行 💜</h1>
 
   <div class="info-box">
     <div style="font-size: 22px; font-weight: bold;">
-      のこり：<span id="timer">60</span>秒　
+      残り：<span id="timer">60</span>秒　
       守った数：<span id="score">0</span>
     </div>
   </div>
 
-  <div class="mission-area" id="mission-text">たいせつなものを守る修行だ！</div>
+  <div class="mission-area" id="mission-text">削るッ！</div>
 
   <div id="target-container"><span id="display-text">---</span></div>
 
@@ -116,17 +133,17 @@
     <div id="current-command" class="command-label">わくをクリック！</div>
     <input type="text" id="magic-input" oninput="checkAction()" autocomplete="off">
     
-    <div id="reset-hint" style="margin-top:10px; color:#fffa00; font-weight:bold; display:none;">
-      ⚠️ もどせない！【Enter】でつぎへ！
+    <div id="reset-hint" style="margin-top:10px; color:#ffff00; font-weight:bold; display:none;">
+      ⚠️ 直せない！【Enter】でつぎへッ！
     </div>
   </div>
 
-  <p style="color:#bdc3c7;">※ 1文字ずつ消すと魔法はしっぱいだ！</p>
+  <p style="color:#cc33ff; font-weight: bold;">※ 1文字ずつ消すなんて『無駄』なんだ…無駄無駄……</p>
 
   <div id="result-overlay">
     <div class="result-card">
       <h2 style="font-size: 32px;">🎉 修行終了 🎉</h2>
-      <p style="font-size: 20px;">君が守りきった数は...</p>
+      <p style="font-size: 20px;">君が「直し」きった数は...</p>
       <span class="result-score" id="final-score">0</span>
       <p style="font-size: 18px;">画面を更新(F5)してもう一回！</p>
     </div>
@@ -140,7 +157,7 @@
     let phase = 1; 
     let currentItem = "";
 
-    const PROTECT_ITEMS = ["💎 伝説のダイヤ 💎", "🎂 豪華なケーキ 🎂", "🐶 かわいい子犬 🐶", "🐱 まんまるネコ 🐱", "🎮 新作ゲーム 🎮", "🍦 特大アイス 🍦"];
+    const PROTECT_ITEMS = ["👽宇宙人", "👶 赤ちゃん", "🐶 かわいい子犬", "🥪サンドイッチ", "👛さいふ", "🐢カメ"];
     const missionText = document.getElementById("mission-text");
     const displayText = document.getElementById("display-text");
     const magicInput = document.getElementById("magic-input");
@@ -162,9 +179,9 @@
       magicInput.value = currentItem;
       
       document.body.classList.add("danger-alert");
-      missionText.innerHTML = "<span style='animation: blink 0.5s infinite; color:#fffa00;'>💣 爆弾だ！ひなんさせて！ 💣</span>";
+      missionText.innerHTML = "<span style='animation: blink 0.5s infinite; color:#ffff00;'>ガオン！✋空間を削り取れッ！</span>";
       commandLabel.innerHTML = "Ctrl + A → Backspace";
-      commandLabel.style.background = "#fffa00";
+      commandLabel.style.background = "#ffff00";
       magicInput.focus();
     }
 
@@ -172,21 +189,21 @@
       if (!isPlaying) startTimer();
 
       if (phase === 1) {
-        // ▼ ここが「押しミス・フォロー機能」！
-        // 文字が増えた（＝Ctrlを押し忘れて文字を打っちゃった）場合
+        // 押しミスフォロー
         if (magicInput.value.length > currentItem.length) {
-            magicInput.select(); // 強制的に「全選択」状態にする！
-            commandLabel.innerHTML = "そのまま Backspace をおして！";
+            magicInput.select();
+            commandLabel.innerHTML = "そのまま Backspace で削り取れッ！";
             return;
         }
 
         if (magicInput.value === "") {
           phase = 2;
           document.body.classList.remove("danger-alert");
-          missionText.innerHTML = "<span style='color:#55efc4'>よし！安全だ！戻して！</span>";
+          missionText.innerHTML = "<span style='color:#55efc4'>『ダイヤモンド』は砕けない！今のを直すッ！</span>";
           commandLabel.innerHTML = "Ctrl + Z";
           commandLabel.style.background = "#55efc4";
-          displayText.textContent = "（ひなん中...💨）";
+          displayText.textContent = "（削り取られた...！）";
+          // 3.5秒で直せない場合のヒント
           setTimeout(() => { if(phase === 2) resetHint.style.display = "block"; }, 3500);
         }
       } 
@@ -200,14 +217,19 @@
     };
 
     function success() {
-      score++;
-      document.getElementById("score").textContent = score;
-      displayText.textContent = "✨ おかえり！ ✨";
-      commandLabel.innerHTML = "成功！！";
-      commandLabel.style.background = "#fff";
-      phase = 0;
-      setTimeout(nextMission, 600);
-    }
+  score++;
+  document.getElementById("score").textContent = score;
+  
+  // ランダムでジョジョっぽい褒め言葉が出るようにする
+  const compliments = ["グレートですよこいつはァ", "ディ・モールト（非常に）良し！", "「覚悟」ができてるなッ！", "「運」が向いてきやがったぜ"];
+  const msg = compliments[Math.floor(Math.random() * compliments.length)];
+  
+  displayText.textContent = "✨ 守りきったッ！ ✨";
+  commandLabel.innerHTML = msg; 
+  commandLabel.style.background = "#fff";
+  phase = 0;
+  setTimeout(nextMission, 800);
+}
 
     function startTimer() {
       isPlaying = true;

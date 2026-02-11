@@ -243,6 +243,47 @@
       inputs.forEach(i => i.readOnly = true);
       document.getElementById("myInfo").value = `終了！${score}個 けせたよ！\n画面を更新（F5）してもう一回あそんでね。`;
     }
+
+// ▼ ここから「★以外を消させない」魔法のコードだっぴ！
+    document.addEventListener('keydown', function(e) {
+        // Backspace または Delete が押された時だけチェックするよ
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+            const el = e.target;
+            
+            // 入力ボックス（edit-box）の中での操作か確認
+            if (!el.classList.contains('edit-box') || el.readOnly) return;
+
+            const start = el.selectionStart; // カーソルの左側の位置
+            const end = el.selectionEnd;     // カーソルの右側の位置
+            const val = el.value;
+
+            let targetChar = "";
+
+            if (start !== end) {
+                // 文字を範囲選択して消そうとしている場合
+                targetChar = val.substring(start, end);
+            } else if (e.key === 'Backspace' && start > 0) {
+                // Backspaceで左の1文字を消そうとしている場合
+                targetChar = val.charAt(start - 1);
+            } else if (e.key === 'Delete' && start < val.length) {
+                // Deleteで右の1文字を消そうとしている場合
+                targetChar = val.charAt(start);
+            }
+
+            // 【重要】消そうとしている文字の中に「★以外」が入っていたら阻止するっぴ！
+            // 全てが「★」だけで構成されていない場合は、入力をキャンセル！
+            if (targetChar !== "" && targetChar.replace(/★/g, "") !== "") {
+                e.preventDefault();
+                
+                // ちょっとした警告演出（まゆちゃん、これで見逃さないっぴ！）
+                el.style.backgroundColor = "#ffcdd2"; 
+                setTimeout(() => {
+                    if(!el.readOnly) el.style.backgroundColor = "";
+                }, 150);
+            }
+        }
+    }, true);
+
   </script>
 </body>
 </html>

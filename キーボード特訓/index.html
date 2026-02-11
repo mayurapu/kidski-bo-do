@@ -1,143 +1,183 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>Keyboard Training - プロのわざを みにつけろ</title>
-  <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
-  <style>
-    body {
-      background-color: #f0f4f8;
-      font-family: "UD Digi Kyokasho N-R", "Kosugi Maru", sans-serif;
-      margin: 0;
-      padding: 30px 15px;
-      text-align: center;
-      color: #2c3e50;
-    }
+    <meta charset="UTF-8">
+    <title>Keyboard Training - プロのわざを みにつけろ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f0f4f8;
+            font-family: "UD Digi Kyokasho N-R", "Kosugi Maru", sans-serif;
+            margin: 0;
+            padding: 30px 15px;
+            text-align: center;
+            color: #2c3e50;
+        }
 
-    h1 {
-      color: #1a237e;
-      font-size: 28px;
-      margin-bottom: 5px;
-    }
+        h1 {
+            color: #1a237e;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
 
-    .sub-title {
-      font-size: 16px;
-      color: #546e7a;
-      margin-bottom: 30px;
-    }
+        .sub-title {
+            font-size: 16px;
+            color: #546e7a;
+            margin-bottom: 30px;
+        }
 
-    .menu-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      max-width: 1000px;
-      margin: 0 auto;
-    }
+        .menu-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
 
-    .menu-card {
-      background: white;
-      border-radius: 15px;
-      padding: 25px 15px;
-      text-decoration: none;
-      color: inherit;
-      transition: all 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      border: 2px solid #cfd8dc;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
+        .menu-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px 15px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 2px solid #cfd8dc;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
 
-    .menu-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-      border-color: #3f51b5;
-    }
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-color: #3f51b5;
+        }
 
-    .icon {
-      font-size: 40px;
-      margin-bottom: 15px;
-    }
+        .icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
 
-    .title {
-      font-size: 20px;
-      font-weight: bold;
-      color: #1a237e;
-      margin-bottom: 10px;
-      border-bottom: 2px solid #e8eaf6;
-      width: 90%;
-      padding-bottom: 5px;
-    }
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a237e;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #e8eaf6;
+            width: 90%;
+            padding-bottom: 5px;
+        }
 
-    .description {
-      font-size: 14px;
-      color: #455a64;
-      line-height: 1.5;
-      text-align: left;
-      padding: 0 10px;
-    }
+        .description {
+            font-size: 14px;
+            color: #455a64;
+            line-height: 1.5;
+            text-align: left;
+            padding: 0 10px;
+        }
 
-    .footer {
-      margin-top: 50px;
-      font-size: 13px;
-      color: #90a4ae;
-    }
+        .footer {
+            margin-top: 50px;
+            font-size: 13px;
+            color: #90a4ae;
+        }
 
-    .menu-card:hover .title { color: #3f51b5; border-bottom-color: #3f51b5; }
-  </style>
+        .menu-card:hover .title { color: #3f51b5; border-bottom-color: #3f51b5; }
+        
+        /* 5部修行カード：ゴールド＆ピンクの特別な演出 */
+        .jojo-card:hover {
+            border-color: #ffd700;
+            box-shadow: 0 10px 20px rgba(255, 105, 180, 0.3);
+        }
+    </style>
 </head>
 <body>
 
-  <h1>Keyboard Training System</h1>
-  <p class="sub-title">じぶんの レベルに あった ミッションを えらんでください</p>
+    <h1>Keyboard Training System</h1>
+    <p class="sub-title">まずは★マークのゲームからやってみよう</p>
 
-  <div class="menu-container">
+    <div class="menu-container">
 
-    <a href="記号マスター.html" class="menu-card">
-      <div class="icon">［＃］</div>
-      <div class="title">きごう 入力スピード</div>
-      <div class="description">
-        Shift（シフト）キーを つかいこなして、とくしゅな きごうを すばやく 打つ トレーニングです。
-      </div>
-    </a>
+        <a href="記号マスター.html" class="menu-card">
+            <div class="icon">［＃］</div>
+            <div class="title">★きごう 入力マスター</div>
+            <div class="description">
+                Shift（シフト）キーを つかいこなして、とくしゅな きごうを すばやく 打つ 練習です。
+            </div>
+        </a>
 
-    <a href="記号マスター２.html" class="menu-card">
-      <div class="icon">( ﾟДﾟ)</div>
-      <div class="title">かおもじ タイピング</div>
-      <div class="description">
-        ふくざつな 文字の くみあわせに なれて、正確（せいかく）な ゆびの うごきを マスターします。
-      </div>
-    </a>
+        <a href="記号マスター２.html" class="menu-card">
+            <div class="icon">( ﾟДﾟ)</div>
+            <div class="title">記号入力マスター２</div>
+            <div class="description">
+                ふくざつな 記号の入力もマスターしてみよう。
+            </div>
+        </a>
 
-    <a href="消しマスター.html" class="menu-card">
-      <div class="icon">⌫</div>
-      <div class="title">こうそく 消去ミッション</div>
-      <div class="description">
-        ミスを 一瞬（いっしゅん）で なおすための、Backspace（バックスペース）操作（そうさ）の とっくんです。
-      </div>
-    </a>
+        <a href="消しマスター.html" class="menu-card">
+            <div class="icon">⌫</div>
+            <div class="title">★ミッション：こうそく 消去</div>
+            <div class="description">
+                Backspace，delete 操作の とっくんです。
+            </div>
+        </a>
 
-    <a href="コピペマスター.html" class="menu-card">
-      <div class="icon">📋</div>
-      <div class="title">コピー＆ペースト</div>
-      <div class="description">
-        Ctrl+C と Ctrl+V を つかって、文字を べつの ばしょへ ワープさせる 練習（れんしゅう）です。
-      </div>
-    </a>
+        <a href="コピペマスター.html" class="menu-card">
+            <div class="icon">📋</div>
+            <div class="title">★コピー＆ペースト</div>
+            <div class="description">
+                Ctrl+C と Ctrl+V を つかって，コピペしよう！
+            </div>
+        </a>
 
-    <a href="全消し復活ゲーム.html" class="menu-card">
-      <div class="icon">⚡</div>
-      <div class="title">システム・リカバリー</div>
-      <div class="description">
-        Ctrl+A（ぜんぶ えらぶ）と Ctrl+Z（もとに もどす）を つかって、データを まもりぬいてください。
-      </div>
-    </a>
+        <a href="全消し復活ゲーム.html" class="menu-card">
+            <div class="icon">⚡</div>
+            <div class="title">削り取って直すッ</div>
+            <div class="description">
+                Ctrl+A と Ctrl+Z を つかって、大切なものを まもりぬいてください。
+            </div>
+        </a>
 
-  </div>
+        <a href="nen-sha.html" class="menu-card">
+            <div class="icon">📷</div>
+            <div class="title">隠者の念写修行</div>
+            <div class="description">
+                Win+Shift+S でスクショし、Ctrl+V で念写ッ！一瞬の判断力を極める修行です。
+            </div>
+        </a>
 
-  <div class="footer">
-    じぶんの ペースで くりかえし チャレンジしましょう。
-  </div>
+
+        <a href="king-crimson-skip.html" class="menu-card jojo-card">
+            <div class="icon">⏩</div>
+            <div class="title">時を飛ばす(Skip)</div>
+            <div class="description">
+                Fn＋CTRL＋→で長い文章の過程を消し飛ばし裏切り者を始末するのだッ！
+            </div>
+        </a>
+
+        <a href="gyo-search.html" class="menu-card jojo-card">
+            <div class="icon">🔍</div>
+            <div class="title">凝をつかって隠を暴け！</div>
+            <div class="description">
+                凝（ギョウ）Ctrl+F を使い、お宝を見つける修行だわさ！
+            </div>
+        </a>
+
+        <a href="typegrowmon.html" class="menu-card jojo-card">
+            <div class="icon">👻📚</div>
+            <div class="title">★タイピングモンスター図鑑</div>
+            <div class="description">
+                タイピングをしてモンスターを集めよう！母音の位置をおぼえよう！
+            </div>
+        </a>
+
+
+    </div>
+
+    <div class="footer">
+        じぶんの ペースで くりかえし チャレンジしましょう。
+    </div>
 
 </body>
 </html>
