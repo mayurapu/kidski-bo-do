@@ -94,6 +94,24 @@
       font-family: monospace;
       margin: 0 3px;
     }
+
+    #restart-btn {
+      display: none;
+      margin: 10px auto;
+      padding: 10px 25px;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      background-color: #1a237e;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px #0d124a;
+    }
+    #restart-btn:hover { background-color: #3f51b5; }
+    #restart-btn:active { transform: translateY(2px); box-shadow: 0 2px #0d124a; }
+    
+    .key-cap { background: #eee; border: 2px solid #666; border-radius: 5px; padding: 2px 8px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 0 #999; color: #333; display: inline-block; }
   </style>
 </head>
 <body onload="initType()">
@@ -107,6 +125,8 @@
       クリア数：<span id="currentScore">0</span>
     </div>
     <textarea id="myInfo" readonly></textarea>
+    
+    <button id="restart-btn" onclick="resetGame()">もういちど特訓するっぴ！</button>
   </div>
 
   <form name="myform">
@@ -120,7 +140,7 @@
     ⇒ 右のわくに <span class="shortcut-key">Ctrl</span>+<span class="shortcut-key">V</span> せよ！
   </div>
 
-  <p style="font-size: 14px; color: #90a4ae; margin-top: 20px;">[F5]キーで リセット</p>
+  <p id="retry-msg" style="font-size: 14px; color: #90a4ae; margin-top: 20px;">[F5]キーで リセット</p>
 
   <script>
     const MASTER_WORDS = [
@@ -139,10 +159,13 @@
     let timeLeft = 60;
     let timerID, checkID;
     let isStarted = false;
+    let isGameOver = false;
 
     const tbody = document.getElementById("typingBody");
     const obj = document.myform;
+    const restartBtn = document.getElementById("restart-btn");
 
+    // テーブルの枠だけ最初に作っておく
     for(let i=0; i<7; i++) {
       let tr = document.createElement("tr");
       tr.innerHTML = `
@@ -154,10 +177,13 @@
       tbody.appendChild(tr);
     }
 
+    // ★ ゲームの初期化（単語をセットする）
     function initType() {
       const shuffled = [...MASTER_WORDS].sort(() => 0.5 - Math.random());
       currentWords = shuffled.slice(0, 7);
 
+      // 並び順をランダムにする準備
+      Aweek = [0, 1, 2, 3, 4, 5, 6];
       for(let i = 0; i < 7; i++) {
         let a = Math.floor(Math.random() * (7 - i));
         let x = Aweek[i];
@@ -166,6 +192,7 @@
       }
       for(let i = 0; i < 7; i++) RAweek[Aweek[i]] = i;
 
+      // 画面の入力欄にセット
       for(let i=0; i<7; i++) {
         obj.elements["txt" + i].value = currentWords[Aweek[i]];
         obj.elements["txt" + i].className = "";
@@ -179,15 +206,35 @@
       
       let best = localStorage.getItem("COPY_BEST");
       document.getElementById("bestScore").textContent = best ? best : "--";
-      document.getElementById("myInfo").value = "右のわくをクリックするとミッション開始！\nすべてのデータを転送（てんそう）せよ。";
+      if (!isGameOver) {
+        document.getElementById("myInfo").value = "右のわくをクリックするとミッション開始！\nすべてのデータを転送（てんそう）せよ。";
+      }
     }
 
+    // ★ リスタートボタンが押されたとき
+    function resetGame() {
+      score = 0;
+      timeLeft = 60;
+      isStarted = false;
+      isGameOver = false;
+      document.getElementById("currentScore").textContent = "0";
+      document.getElementById("timer").textContent = "60";
+      document.getElementById("retry-msg").innerHTML = "[F5]キーで リセット";
+      restartBtn.style.display = "none";
+      initType();
+    }
+
+    // ★ 入力欄をクリックしたとき（ゲーム開始）
     function handleFocus(idx) {
+      if(isGameOver) return; 
+      
       if(!isStarted) {
         isStarted = true;
         timerID = setInterval(updateTimer, 1000);
         checkID = setInterval(checkInput, 100);
       }
+
+      // 初めてその行をクリックしたとき、ヒント文字を消す
       if(RStatus[idx] === 0) {
         obj.elements["ans" + idx].value = "";
         obj.elements["ans" + idx].style.color = "#000";
@@ -211,6 +258,7 @@
         if(RStatus[i] === 2) continue;
         
         let input = obj.elements["ans" + i];
+        // ヒントが消えていて（RStatusが1）、かつ中身が正解と同じなら
         if(RStatus[i] === 1 && input.value === currentWords[i]) {
           input.className = "success-text";
           input.readOnly = true;
@@ -222,27 +270,36 @@
           roundClear = false;
         }
       }
+
+      // 全部の行が正解したら次の問題へ
       if(roundClear) {
-        setTimeout(() => {
-          isStarted = false;
-          clearInterval(timerID);
-          clearInterval(checkID);
-          initType();
-          handleFocus(); // タイマー再開用
-        }, 300);
+        initType();
       }
     }
 
     function finishGame() {
+      isGameOver = true;
+      isStarted = false;
       for(let i=0; i<7; i++) obj.elements["ans" + i].readOnly = true;
+      
       let best = localStorage.getItem("COPY_BEST") || 0;
-      if(score > best) {
+      if(score > parseInt(best)) {
         localStorage.setItem("COPY_BEST", score);
         document.getElementById("myInfo").value = "MISSION COMPLETE!\n最高きろくを 更新しました！";
       } else {
         document.getElementById("myInfo").value = "終了！\nさらなる スピードアップを めざしましょう。";
       }
+      
+      restartBtn.style.display = "block";
+      document.getElementById("retry-msg").innerHTML = "もういちど遊ぶなら <span class=\"key-cap\">スペース</span> キーをおしてね！";
     }
+
+    // どこでもスペースキーでリセット
+    window.addEventListener("keydown", (e) => {
+      if (isGameOver && e.code === "Space") {
+        resetGame();
+      }
+    });
   </script>
 </body>
 </html>

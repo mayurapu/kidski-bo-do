@@ -114,6 +114,23 @@
       font-weight: bold;
       font-size: 14px;
     }
+
+    /* ▼ 追加：再スタートボタンのスタイル */
+    #restart-btn {
+      display: none;
+      margin: 10px auto;
+      padding: 10px 25px;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      background-color: #e65100;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px #bf360c;
+    }
+    #restart-btn:hover { background-color: #ff9800; }
+    #restart-btn:active { transform: translateY(2px); box-shadow: 0 2px #bf360c; }
   </style>
 </head>
 <body onload="initGame()">
@@ -126,6 +143,8 @@
       クリア数：<span id="currentScore">0</span>
     </div>
     <textarea id="myInfo" readonly></textarea>
+    
+    <button id="restart-btn" onclick="initGame()">もういちど遊ぶっぴ！</button>
   </div>
 
   <div class="game-container" id="gameArea"></div>
@@ -136,10 +155,9 @@
     <span class="key-cap">Delete</span> ： カーソルの <b>右がわ →</b> をけす
   </div>
 
-  <p style="font-size: 14px; color: #90a4ae; margin-top: 20px;">[F5]キーで やりなおし</p>
+  <p id="retry-msg" style="font-size: 14px; color: #90a4ae; margin-top: 20px;">[F5]キーで やりなおし</p>
 
   <script>
-    // ▼ ワードを大幅に増やしたわよ！
     const WORDS = [
       "吉良吉影", "ピカチュウ", "シンジ", "幽波紋", "ドガース", 
       "ハローキティ", "五条悟", "ちいかわ", "アーニャ", "キルア", "クラピカ",
@@ -158,6 +176,10 @@
     let timeLeft = 60;
     let timerID;
     let isPlaying = false;
+    let isGameOver = false;
+
+    const restartBtn = document.getElementById("restart-btn");
+    const retryMsg = document.getElementById("retry-msg");
 
     function makeQuestion(word) {
       let q = word.split("");
@@ -173,9 +195,12 @@
       score = 0;
       timeLeft = 60;
       isPlaying = false;
+      isGameOver = false;
       document.getElementById("currentScore").textContent = score;
       document.getElementById("timer").textContent = timeLeft;
       document.getElementById("myInfo").value = "入力ボックスをクリックしてスタート！\n「★」だけをきれいに消してね！";
+      retryMsg.innerHTML = "[F5]キーで やりなおし";
+      restartBtn.style.display = "none";
       
       const area = document.getElementById("gameArea");
       area.innerHTML = "";
@@ -203,7 +228,7 @@
     }
 
     function startGame() {
-      if(isPlaying) return;
+      if(isPlaying || isGameOver) return;
       isPlaying = true;
       timerID = setInterval(() => {
         timeLeft--;
@@ -229,53 +254,56 @@
     }
 
     function nextSet() {
+      if(isGameOver) return;
       const area = document.getElementById("gameArea");
       area.innerHTML = "";
       for(let i=0; i<5; i++) {
         addQuestionRow();
       }
-      area.querySelector("input").focus();
+      const firstInput = area.querySelector("input");
+      if(firstInput) firstInput.focus();
     }
 
     function endGame() {
+      isPlaying = false;
+      isGameOver = true;
       clearInterval(timerID);
       const inputs = document.querySelectorAll(".edit-box");
       inputs.forEach(i => i.readOnly = true);
-      document.getElementById("myInfo").value = `終了！${score}個 けせたよ！\n画面を更新（F5）してもう一回あそんでね。`;
+      
+      document.getElementById("myInfo").value = `終了！${score}個 けせたよ！`;
+      restartBtn.style.display = "block";
+      retryMsg.innerHTML = "もういちど遊ぶなら <span class=\"key-cap\">スペース</span> キーをおしてね！";
     }
 
-// ▼ ここから「★以外を消させない」魔法のコードだっぴ！
+    // ★どこをクリックしていてもスペースキーでリスタートできるようにしたっぴ！
+    window.addEventListener("keydown", (e) => {
+      if (isGameOver && e.code === "Space") {
+        initGame();
+      }
+    });
+
+    // 「★以外を消させない」コード
     document.addEventListener('keydown', function(e) {
-        // Backspace または Delete が押された時だけチェックするよ
         if (e.key === 'Backspace' || e.key === 'Delete') {
             const el = e.target;
-            
-            // 入力ボックス（edit-box）の中での操作か確認
             if (!el.classList.contains('edit-box') || el.readOnly) return;
 
-            const start = el.selectionStart; // カーソルの左側の位置
-            const end = el.selectionEnd;     // カーソルの右側の位置
+            const start = el.selectionStart;
+            const end = el.selectionEnd;
             const val = el.value;
-
             let targetChar = "";
 
             if (start !== end) {
-                // 文字を範囲選択して消そうとしている場合
                 targetChar = val.substring(start, end);
             } else if (e.key === 'Backspace' && start > 0) {
-                // Backspaceで左の1文字を消そうとしている場合
                 targetChar = val.charAt(start - 1);
             } else if (e.key === 'Delete' && start < val.length) {
-                // Deleteで右の1文字を消そうとしている場合
                 targetChar = val.charAt(start);
             }
 
-            // 【重要】消そうとしている文字の中に「★以外」が入っていたら阻止するっぴ！
-            // 全てが「★」だけで構成されていない場合は、入力をキャンセル！
             if (targetChar !== "" && targetChar.replace(/★/g, "") !== "") {
                 e.preventDefault();
-                
-                // ちょっとした警告演出（まゆちゃん、これで見逃さないっぴ！）
                 el.style.backgroundColor = "#ffcdd2"; 
                 setTimeout(() => {
                     if(!el.readOnly) el.style.backgroundColor = "";
@@ -283,7 +311,6 @@
             }
         }
     }, true);
-
   </script>
 </body>
 </html>

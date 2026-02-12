@@ -114,6 +114,23 @@
     .key-cap { background: #eee; border: 2px solid #666; border-radius: 5px; padding: 2px 8px; font-weight: bold; font-size: 18px; box-shadow: 0 2px 0 #999; display: inline-block; min-width: 20px; text-align: center; }
     .plus { margin: 0 5px; font-weight: bold; color: #c2185b; }
     .success { background-color: #c8e6c9 !important; border-color: #4caf50 !important; }
+
+    /* ▼ 追加：再スタートボタンのスタイル */
+    #restart-btn {
+      display: none;
+      margin: 15px auto;
+      padding: 10px 25px;
+      font-size: 20px;
+      font-weight: bold;
+      color: white;
+      background-color: #f06292;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px #c2185b;
+    }
+    #restart-btn:hover { background-color: #f48fb1; }
+    #restart-btn:active { transform: translateY(2px); box-shadow: 0 2px #c2185b; }
   </style>
 </head>
 <body onload="initGame()">
@@ -132,6 +149,8 @@
     </div>
 
     <div id="message" style="font-weight: bold; color: #ad1457;">下のガイドを見ながら作ってみよう！</div>
+
+    <button id="restart-btn" onclick="initGame()">もういちど遊ぶっぴ！</button>
 
     <div id="quote-display"></div>
   </div>
@@ -228,20 +247,24 @@
     let currentTarget = "";
     let isPlaying = false;
     let timerID;
+    let isChecking = false;
 
     const display = document.getElementById("question-display");
     const label = document.getElementById("emotion-label");
     const inputArea = document.getElementById("input-area");
     const quoteDisplay = document.getElementById("quote-display");
+    const restartBtn = document.getElementById("restart-btn");
 
     function initGame() {
       score = 0;
       timeLeft = 90;
       isPlaying = false;
+      isChecking = false;
       document.getElementById("currentScore").textContent = "0";
       document.getElementById("timer").textContent = "90";
       document.getElementById("message").textContent = "トントン！と２回 Enter をおすのがコツだよ！";
       quoteDisplay.style.display = "none";
+      restartBtn.style.display = "none";
       inputArea.readOnly = false;
       inputArea.value = "";
       inputArea.focus();
@@ -255,28 +278,38 @@
       display.textContent = currentTarget;
       inputArea.value = "";
       inputArea.classList.remove("success");
+      isChecking = false;
     }
 
     function handleKey(e) {
-      if (timeLeft <= 0) {
-        if (e.code === "Space") initGame();
-        return;
-      }
+      if (timeLeft <= 0) return;
+
       if (!isPlaying && e.key !== "Enter" && e.key !== "Process") {
         startTimer();
       }
+
       if (e.key === "Enter") {
-        // 少し遅らせて確定後の文字をチェックするよ
-        setTimeout(() => {
-          if (inputArea.value === currentTarget) {
-            score++;
-            document.getElementById("currentScore").textContent = score;
-            inputArea.classList.add("success");
-            setTimeout(nextQuestion, 200);
-          }
-        }, 10);
+        // Enterを連打して空のまま判定されるのを防ぐ
+        if (isChecking || inputArea.value === "") return;
+
+        if (inputArea.value === currentTarget) {
+          isChecking = true;
+          score++;
+          document.getElementById("currentScore").textContent = score;
+          inputArea.classList.add("success");
+          setTimeout(nextQuestion, 150);
+        } else {
+          inputArea.value = "";
+        }
       }
     }
+
+    // ▼ ★どこをクリックしていてもスペースでリスタートできるようにしたよ！
+    window.addEventListener("keydown", (e) => {
+      if (timeLeft <= 0 && e.code === "Space") {
+        initGame();
+      }
+    });
 
     function startTimer() {
       isPlaying = true;
@@ -292,9 +325,10 @@
           const randomQuote = ANIME_QUOTES[Math.floor(Math.random() * ANIME_QUOTES.length)];
           quoteDisplay.innerHTML = `<strong>★ キャラクターからのメッセージ ★</strong><br>${randomQuote}`;
           quoteDisplay.style.display = "block";
+          restartBtn.style.display = "block";
 
           document.getElementById("message").innerHTML = 
-            `<b>${score}こ クリア！</b><br>リトライは <span class="key-cap" style="box-shadow:none;">スペース</span> をおしてね！`;
+            `<b>${score}こ クリア！</b><br>リトライは <span class="key-cap" style="box-shadow:none;">スペース</span> かボタンをおしてね！`;
         }
       }, 1000);
     }
